@@ -1,6 +1,5 @@
 package org.sunbird.job.util
 
-import org.apache.commons.lang3.StringUtils
 import org.sunbird.cloud.storage.BaseStorageService
 import org.sunbird.cloud.storage.factory.{StorageConfig, StorageServiceFactory}
 import org.sunbird.job.BaseJobConfig
@@ -19,7 +18,7 @@ class CloudStorageUtil(config: BaseJobConfig) extends Serializable {
     if (null == storageService) {
 
       val storageKey = config.getString("cloud_storage_key", "")
-      val storageSecret = config.getString("cloud_storage_secret", "")
+      val storageSecret = config.getString("cloud_storage_secret", "").replace("\\n", "\n")
       // TODO: endPoint defined to support "cephs3". Make code changes after cloud-store-sdk 2.11 support it.
       val endPoint = Option(config.getString("cloud_storage_endpoint", ""))
       println("StorageService --> params: " +  cloudStorageType + "," + storageKey)
@@ -64,6 +63,14 @@ class CloudStorageUtil(config: BaseJobConfig) extends Serializable {
 
   def downloadFile(downloadPath: String, file: String, slug: Option[Boolean] = Option(false)): Unit = {
     getService.download(getContainerName, file, downloadPath, slug)
+  }
+
+  def downloadFileFromContainer(container: String, downloadPath: String, file: String, slug: Option[Boolean] = Option(false)): Unit = {
+    getService.download(container, file, downloadPath, slug)
+  }
+
+  def getSignedUrl(container: String, path: String, ttl: Int): String = {
+    getService.getPutSignedURL(container, path, Option.apply(ttl), Option.apply("r"), Option.empty)
   }
 
 }
