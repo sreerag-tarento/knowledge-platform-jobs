@@ -18,7 +18,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.sunbird</groupId>
+            <groupId>net.karmayogibharat</groupId>
             <artifactId>cloud-store-sdk_${scala.version}</artifactId>
             <version>1.4.6</version>
             <exclusions>
