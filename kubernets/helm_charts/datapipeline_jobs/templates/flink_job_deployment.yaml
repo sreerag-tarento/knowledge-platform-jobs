@@ -110,7 +110,6 @@ spec:
         command: ["/opt/flink/bin/standalone-job.sh"]
         args: ["start-foreground",
                "--job-classname={{ .Values.job_classname }}", 
-               "-Dfs.azure.account.key.{{ .Values.azure_account }}.blob.core.windows.net={{ .Values.azure_secret }}",
                "-Dweb.submit.enable=false",
                "-Dmetrics.reporter.prom.class=org.apache.flink.metrics.prometheus.PrometheusReporter",
                "-Dmetrics.reporter.prom.port={{ .Values.jobmanager.prom_port }}",
@@ -183,7 +182,6 @@ spec:
         workingDir: {{ .Values.taskmanager.flink_work_dir }}
         command: ["/opt/flink/bin/taskmanager.sh"]
         args: ["start-foreground",
-          "-Dfs.azure.account.key.{{ .Values.azure_account }}.blob.core.windows.net={{ .Values.azure_secret }}",
           "-Dweb.submit.enable=false",
           "-Dmetrics.reporter.prom.class=org.apache.flink.metrics.prometheus.PrometheusReporter",
           "-Dmetrics.reporter.prom.host={{ .Release.Name }}-taskmanager",

@@ -3,8 +3,6 @@ imagepullsecrets: {{ imagepullsecrets }}
 dockerhub: {{ dockerhub }}
 repository: {{flink_repository|default('knowledge-platform-jobs')}}
 image_tag: {{ image_tag }}
-azure_account: {{ azure_account }}
-azure_secret: {{ azure_secret }}
 serviceMonitor:
   enabled: {{ service_monitor_enabled | lower}}
 
@@ -77,12 +75,12 @@ base_config: |
       statebackend {
         blob {
           storage {
-            account = "{{ azure_account }}"
-            container = "{{ flink_container_name }}"
+            account = ""
+            container = ""
             checkpointing.dir = "checkpoint"
           }
         }
-        base.url = "wasbs://"${job.statebackend.blob.storage.container}"@"${job.statebackend.blob.storage.account}"/"${job.statebackend.blob.storage.checkpointing.dir}
+        base.url = ""
       }
     }
     task {
