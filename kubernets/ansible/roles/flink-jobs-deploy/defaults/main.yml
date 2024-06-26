@@ -330,4 +330,8 @@ qrcode_image_generator_parallelism: 1
 source_base_url: "{{proto}}://{{domain_name}}/api"
 cb_ext_service_base_url: http://sb-cb-ext-service.{{ env }}.svc.cluster.local:7001/
 
+###  Notification Job related Vars
+notification_job_consumer_parallelism: 1
+notification_job_parallelism: 1
+mail_server_use_tls: "true"
 
