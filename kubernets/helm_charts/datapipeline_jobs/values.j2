@@ -351,60 +351,6 @@ questionset-publish:
     jobmanager.execution.failover-strategy: region
     taskmanager.memory.network.fraction: 0.1
 
-video-stream-generator:
-  video-stream-generator: |+
-    include file("/data/flink/conf/base-config.conf")
-    kafka {
-      input.topic = "{{ env_name }}.content.postpublish.request"
-      groupId = "{{ env_name }}-video-stream-generator-group"
-    }
-    task {
-      timer.duration = {{ video_stream_generator_timer_duration }}
-      consumer.parallelism = {{ video_stream_generator_consumer_parallelism }}
-      parallelism = {{ video_stream_generator_parallelism }}
-      max.retries = {{ video_stream_generator_max_retries }}
-    }
-    lms-cassandra {
-      keyspace = {{ platform_keyspace_name }}
-      table = "job_request"
-    }
-    service.content.basePath="{{ kp_content_service_base_url }}"
-    azure {
-      location = "centralindia"
-      login {
-        endpoint="https://login.microsoftonline.com"
-      }
-      api {
-        endpoint="https://management.azure.com"
-        version = "2018-07-01"
-      }
-      transform {
-        default = "media_transform_default"
-        hls = "media_transform_hls"
-      }
-      stream {
-        base_url="{{ video_stream_generator_azure_stream_base_url }}"
-        endpoint_name = "default"
-        protocol = "Hls"
-        policy_name = "Predefined_ClearStreamingOnly"
-      }
-    }
-    azure_tenant="{{ video_stream_generator_azure_tenant }}"
-    azure_subscription_id="{{ video_stream_generator_azure_subscription_id }}"
-    azure_account_name="{{ video_stream_generator_azure_account_name }}"
-    azure_resource_group_name="{{ video_stream_generator_azure_resource_group_name }}"
-    azure_token_client_key="{{ video_stream_generator_azure_token_client_key }}"
-    azure_token_client_secret="{{ video_stream_generator_azure_token_client_secret }}"
-
-
-  flink-conf: |+
-    jobmanager.memory.flink.size: {{ flink_job_names['video-stream-generator'].jobmanager_memory }}
-    taskmanager.memory.flink.size: {{ flink_job_names['video-stream-generator'].taskmanager_memory }}
-    taskmanager.numberOfTaskSlots: {{ flink_job_names['video-stream-generator'].taskslots }}
-    parallelism.default: 1
-    jobmanager.execution.failover-strategy: region
-    taskmanager.memory.network.fraction: 0.1
-
 search-indexer:
   search-indexer: |+
     include file("/data/flink/conf/base-config.conf")
@@ -570,115 +516,6 @@ audit-history-indexer:
     jobmanager.execution.failover-strategy: region
     taskmanager.memory.network.fraction: 0.1
 
-auto-creator-v2:
-  auto-creator-v2: |+
-    include file("/data/flink/conf/base-config.conf")
-    kafka {
-      input.topic = "{{ env_name }}.object.import.request"
-      groupId = "{{ env_name }}-auto-creator-v2-group"
-    }
-
-    task {
-      consumer.parallelism = {{ auto_creator_v2_consumer_parallelism }}
-      parallelism = {{ auto_creator_v2_parallelism }}
-      window.time = 60
-    }
-
-    question {
-      keyspace = "{{ assessment_keyspace_name }}"
-    }
-    questionset {
-      keyspace = "{{ hierarchy_keyspace_name }}"
-    }
-    service {
-      content.basePath = "{{ kp_content_service_base_url }}"
-    }
-    cloud_storage_type="{{ cloud_service_provider }}"
-    cloud_storage_key="{{ cloud_storage_key }}"
-    cloud_storage_secret="{{ cloud_storage_secret | replace('\n', '\\n') }}"
-    cloud_storage_container="{{ cloud_storage_content_bucketname }}"
-    cloud_storage_endpoint="{{ cloud_storage_endpoint }}"
-
-    source {
-      baseUrl="{{ source_base_url }}"
-    }
-
-  flink-conf: |+
-    jobmanager.memory.flink.size: {{ flink_job_names['auto-creator-v2'].jobmanager_memory }}
-    taskmanager.memory.flink.size: {{ flink_job_names['auto-creator-v2'].taskmanager_memory }}
-    taskmanager.numberOfTaskSlots: {{ flink_job_names['auto-creator-v2'].taskslots }}
-    parallelism.default: 1
-    jobmanager.execution.failover-strategy: region
-    taskmanager.memory.network.fraction: 0.1
-
-
-content-auto-creator:
-  content-auto-creator: |+
-    include file("/data/flink/conf/base-config.conf")
-    kafka {
-      input.topic = "{{ env_name }}.auto.creation.job.request"
-      groupId = "{{ env_name }}-content-auto-creator-group"
-      failed.topic = "{{ env_name }}.auto.creation.job.request.failed"
-    }
-
-    task {
-      consumer.parallelism = {{ content_auto_creator_consumer_parallelism }}
-      parallelism = {{ content_auto_creator_parallelism }}
-      window.time = 60
-    }
-
-    redis {
-      database {
-        relationCache.id = 10
-        collectionCache.id = 5
-      }
-    }
-
-    service {
-      content_service.basePath = "{{ kp_content_service_base_url }}"
-      search.basePath = "{{ kp_search_service_base_url }}"
-      lms.basePath = "{{ lms_service_base_url }}"
-      learning_service.basePath = "{{ kp_learning_service_base_url }}"
-    }
-
-    cloud_storage_type="{{ cloud_service_provider }}"
-    cloud_storage_key="{{ cloud_storage_key }}"
-    cloud_storage_secret="{{ cloud_storage_secret | replace('\n', '\\n') }}"
-    cloud_storage_container="{{ cloud_storage_content_bucketname }}"
-    cloud_storage_endpoint="{{ cloud_storage_endpoint }}"
-
-    content_auto_creator {
-        actions=auto-create
-        allowed_object_types=["Content"]
-        allowed_content_stages=["create","upload","review","publish"]
-        content_mandatory_fields=["name","code","mimeType","primaryCategory","artifactUrl","lastPublishedBy"]
-        content_props_to_removed=["identifier","downloadUrl","variants","createdOn","collections","children","lastUpdatedOn","SYS_INTERNAL_LAST_UPDATED_ON","versionKey","s3Key","status","pkgVersion","toc_url","mimeTypesCount","contentTypesCount","leafNodesCount","childNodes","prevState","lastPublishedOn","flagReasons","compatibilityLevel","size","publishChecklist","publishComment","lastPublishedBy","rejectReasons","rejectComment","badgeAssertions","leafNodes","sYS_INTERNAL_LAST_UPDATED_ON","previewUrl","channel","objectType","visibility","version","pragma","prevStatus","streamingUrl","idealScreenSize","contentDisposition","lastStatusChangedOn","idealScreenDensity","lastSubmittedOn","publishError","flaggedBy","flags","lastFlaggedOn","publisher","lastUpdatedBy","lastSubmittedBy","uploadError","lockKey","publish_type","reviewError","totalCompressedSize","origin","originData","importError","questions"]
-        bulk_upload_mime_types=["video/mp4"]
-        artifact_upload_max_size=52428800
-        content_create_props=["name","code","mimeType","contentType","framework","processId","primaryCategory"]
-        artifact_upload_allowed_source=[]
-        g_service_acct_cred="{{ auto_creator_g_service_acct_cred }}"
-        gdrive.application_name=drive-download
-        initial_backoff_delay=120000
-        maximum_backoff_delay=1200000
-        increment_backoff_delay=2
-        api_call_delay=1
-        maxIteration=1
-    }
-
-    search_exists_fields=["originData"]
-    search_fields=["identifier","mimeType","pkgVersion","channel","status","origin","originData","artifactUrl"]
-
-
-  flink-conf: |+
-    jobmanager.memory.flink.size: {{ flink_job_names['content-auto-creator'].jobmanager_memory }}
-    taskmanager.memory.flink.size: {{ flink_job_names['content-auto-creator'].taskmanager_memory }}
-    taskmanager.numberOfTaskSlots: {{ flink_job_names['content-auto-creator'].taskslots }}
-    parallelism.default: 1
-    jobmanager.execution.failover-strategy: region
-    taskmanager.memory.network.fraction: 0.1
-
-
 audit-event-generator:
   audit-event-generator: |+
     include file("/data/flink/conf/base-config.conf")
@@ -705,36 +542,6 @@ audit-event-generator:
     jobmanager.memory.flink.size: {{ flink_job_names['audit-event-generator'].jobmanager_memory }}
     taskmanager.memory.flink.size: {{ flink_job_names['audit-event-generator'].taskmanager_memory }}
     taskmanager.numberOfTaskSlots: {{ flink_job_names['audit-event-generator'].taskslots }}
-    parallelism.default: 1
-    jobmanager.execution.failover-strategy: region
-    taskmanager.memory.network.fraction: 0.1
-
-metrics-data-transformer:
-  metrics-data-transformer: |+
-    include file("/data/flink/conf/base-config.conf")
-    kafka {
-      input.topic = {{ env_name }}.learning.graph.events
-      groupId = {{ env_name }}-metrics-data-transformer-group
-    }
-
-    task {
-      consumer.parallelism = {{ metrics_data_transformer_consumer_parallelism }}
-      parallelism = {{ metrics_data_transformer_parallelism }}
-      producer.parallelism = {{ metrics_data_transformer_producer_parallelism }}
-    }
-    content_read_api = "/content/v3/read"
-    content_update_api = "/content/v4/system/update"
-    service {
-      content.basePath = "{{ kp_content_service_base_url }}"
-      sourcing.content.basePath = "{{ sourcing_content_service_base_url }}"
-    }
-    sourcing.update.api.response.error.code = ["404", "400"]
-    data.metrics = ["me_totalRatingsCount","me_averageRating","me_totalTimeSpentInSec","me_totalPlaySessionCount"]
-
-  flink-conf: |+
-    jobmanager.memory.flink.size: {{ flink_job_names['metrics-data-transformer'].jobmanager_memory }}
-    taskmanager.memory.flink.size: {{ flink_job_names['metrics-data-transformer'].taskmanager_memory }}
-    taskmanager.numberOfTaskSlots: {{ flink_job_names['metrics-data-transformer'].taskslots }}
     parallelism.default: 1
     jobmanager.execution.failover-strategy: region
     taskmanager.memory.network.fraction: 0.1
@@ -941,43 +748,6 @@ karma-points-persist-processor:
     jobmanager.execution.failover-strategy: region
     taskmanager.memory.network.fraction: 0.1
 
-mvc-indexer:
-  mvc-indexer: |+
-    include "base-config.conf"
-
-    kafka {
-      input.topic = "{{ env_name }}.mvc.processor.job.request"
-      groupId = "{{ env_name }}-mvc-indexer-group"
-      output.failed.topic = "{{ env_name }}.mvc.events.failed"
-    }
-
-    task {
-      consumer.parallelism = {{ mvc_indexer_consumer_parallelism }}
-      parallelism = {{ mvc_indexer_parallelism }}
-    }
-
-    lms-cassandra.keyspace = "{{ content_keyspace_name }}"
-    lms-cassandra.table = "content_data"
-
-    nested.fields="{{ mvc_indexer_nested_fields }}"
-
-    service.content.basePath = "{{ kp_content_service_base_url }}"
-    es.indexAlias = "mvc-content"
-
-    ml.vector.host="{{ mvc_indexer_ml_vector_host }}"
-    ml.vector.port="{{ mvc_indexer_ml_vector_port }}"
-    ml.keyword.host="{{ mvc_indexer_ml_keyword_host }}"
-    ml.keyword.port="{{ mvc_indexer_ml_keyword_port }}"
-
-
-  flink-conf: |+
-    jobmanager.memory.flink.size: {{ flink_job_names['mvc-indexer'].jobmanager_memory }}
-    taskmanager.memory.flink.size: {{ flink_job_names['mvc-indexer'].taskmanager_memory }}
-    taskmanager.numberOfTaskSlots: {{ flink_job_names['mvc-indexer'].taskslots }}
-    parallelism.default: 1
-    jobmanager.execution.failover-strategy: region
-    taskmanager.memory.network.fraction: 0.1
-
 content-publish:
   content-publish: |+
     include file("/data/flink/conf/base-config.conf")
@@ -1132,48 +902,34 @@ content-publish:
     jobmanager.execution.failover-strategy: region
     taskmanager.memory.network.fraction: 0.1
 
-qrcode-image-generator:
-  qrcode-image-generator: |+
+notification-job:
+  notification-job: |+
     include file("/data/flink/conf/base-config.conf")
-
     kafka {
-      input.topic = "{{ env_name }}.qrimage.request"
-      groupId = "{{ env_name }}-qrcode-image-generator-group"
+      input.topic = {{ kafka_topic_lms_notification }}
+      groupId = {{ kafka_group_lms_notification }}
     }
-
     task {
-      consumer.parallelism = {{ qrcode_image_generator_consumer_parallelism }}
-      parallelism = {{ qrcode_image_generator_parallelism }}
-      window.time = 60
+      restart-strategy.attempts = {{ restart_attempts }} # max 3 restart attempts
+      restart-strategy.delay = 240000 # in milli-seconds # on max restarts (3) within 4 min the job will fail.
+      consumer.parallelism = {{ notification_job_consumer_parallelism }}
+      parallelism = {{ notification_job_parallelism }}
     }
+    fcm_account_key= "{{ core_vault_sunbird_fcm_account_key }}"
+    sms_auth_key= "{{sunbird_msg_91_auth}}"
+    mail_server_from_email= "{{sunbird_mail_server_from_email}}"
+    sms_default_sender= "{{sunbird_notification_msg_default_sender}}"
+    mail_server_username= "{{sunbird_mail_server_username}}"
+    mail_server_password= "{{sunbird_mail_server_password}}"
+    mail_server_host= "{{sunbird_mail_server_host}}"
+    mail_server_port= "{{sunbird_mail_server_port}}"
+    mail_server_use_tls= "{{mail_server_use_tls}}"
 
-    lp.tmp.file.location="/tmp"
-
-    qr.image {
-        imageFormat="png"
-        bottomMargin=0
-        margin=1
-    }
-
-    cloud_storage_type="{{ cloud_service_provider }}"
-    cloud_storage_key="{{ cloud_storage_key }}"
-    cloud_storage_secret="{{ cloud_storage_secret | replace('\n', '\\n') }}"
-    cloud_storage_container="{{ cloud_storage_content_bucketname }}"
-    cloud_storage_endpoint="{{ cloud_storage_endpoint }}"
-    
-    lms-cassandra {
-      keyspace = "dialcodes"
-      table {
-        image = "dialcode_images"
-        batch = "dialcode_batch"
-      }
-    }
 
   flink-conf: |+
-    jobmanager.memory.flink.size: {{ flink_job_names['qrcode-image-generator'].jobmanager_memory }}
-    taskmanager.memory.flink.size: {{ flink_job_names['qrcode-image-generator'].taskmanager_memory }}
-    taskmanager.numberOfTaskSlots: {{ flink_job_names['qrcode-image-generator'].taskslots }}
+    jobmanager.memory.flink.size: {{ flink_job_names['notification-job'].jobmanager_memory }}
+    taskmanager.memory.flink.size: {{ flink_job_names['notification-job'].taskmanager_memory }}
+    taskmanager.numberOfTaskSlots: {{ flink_job_names['notification-job'].taskslots }}
     parallelism.default: 1
     jobmanager.execution.failover-strategy: region
     taskmanager.memory.network.fraction: 0.1
-
