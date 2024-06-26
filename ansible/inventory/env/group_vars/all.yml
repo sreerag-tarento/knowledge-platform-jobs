@@ -111,3 +111,5 @@ cert_container_name: "{{cert_env_prefix}}-e-credentials"
 default_channel: "org.sunbird"
 download_neo4j: true
 neo4j_upstream_download: false
+kafka_group_lms_notification: "{{env_name}}-lms-notification"
+kafka_topic_lms_notification: "{{env_name}}.lms.notification"
