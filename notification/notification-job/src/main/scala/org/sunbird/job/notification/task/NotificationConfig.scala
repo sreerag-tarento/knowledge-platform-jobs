@@ -28,6 +28,7 @@ class NotificationConfig(override val config: Config) extends BaseJobConfig(conf
     val mail_server_password : String = config.getString("mail_server_password")
     val mail_server_host : String = config.getString("mail_server_host")
     val mail_server_port : String = config.getString("mail_server_port")
+    val mail_server_use_tls : String = config.getString("mail_server_use_tls")
     val max_iteration_count_samza_job : Int = 2
     
     // Metric List

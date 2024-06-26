@@ -54,7 +54,7 @@ class NotificationFunction(config: NotificationConfig,  @transient var notificat
         super.open(parameters)
         maxIterations = getMaxIterations
         notificationUtil =  new NotificationUtil(config.mail_server_from_email, config.mail_server_username, config.mail_server_password, config.mail_server_host, config.mail_server_port,
-            config.sms_auth_key, config.sms_default_sender, config.fcm_account_key)
+            config.sms_auth_key, config.sms_default_sender, config.fcm_account_key, config.mail_server_use_tls)
         logger.info("NotificationService:initialize: Service config initialized")
     }
     

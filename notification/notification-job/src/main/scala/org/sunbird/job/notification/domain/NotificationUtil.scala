@@ -10,12 +10,12 @@ import org.sunbird.notification.utils.SMSFactory
 import java.util
 
 class NotificationUtil(fromEmail : String, mailUsername: String, mailPassword: String, mailHost: String, mailPort: String, smsAuthKey: String, smsDefaultSender: String,
-                       accountKey: String) {
+                       accountKey: String, isEmailTLSEnabled: String) {
     
     private[this] val logger = LoggerFactory.getLogger(classOf[NotificationUtil])
 
     val emailFactory = new IEmailProviderFactory
-    val emailService = emailFactory.create(new EmailConfig(fromEmail, mailUsername, mailPassword, mailHost, mailPort))
+    val emailService = emailFactory.create(new EmailConfig(fromEmail, mailUsername, mailPassword, mailHost, mailPort, isEmailTLSEnabled))
     val smsConfig = new SMSConfig(smsAuthKey, smsDefaultSender)
     val smsProvider = SMSFactory.getInstance("91SMS", smsConfig)
     val ifcmNotificationService = NotificationFactory.getInstance(NotificationFactory.instanceType.httpClinet.name)

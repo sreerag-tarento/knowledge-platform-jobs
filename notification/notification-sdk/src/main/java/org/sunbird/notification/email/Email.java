@@ -67,6 +67,7 @@ public class Email {
         StringUtils.isNotBlank(config.getPort())
             ? config.getPort()
             : Util.readValue(Constants.EMAIL_SERVER_PORT);
+    this.isTlsEnabled = config.getIsTLSEnabled();
     initProps();
   }
 

@@ -7,18 +7,28 @@ public class EmailConfig {
   private String password;
   private String host;
   private String port;
+  private String isTLSEnabled;
 
-  public EmailConfig(String fromEmail, String userName, String password, String host, String port) {
+  public EmailConfig(String fromEmail, String userName, String password, String host, String port, String isTLSEnabled) {
     super();
     this.fromEmail = fromEmail;
     this.userName = userName;
     this.password = password;
     this.host = host;
     this.port = port;
+    this.isTLSEnabled = isTLSEnabled;
   }
 
   public EmailConfig() {
     super();
+  }
+
+  public String getIsTLSEnabled() {
+    return isTLSEnabled;
+  }
+
+  public void setIsTLSEnabled(String isTLSEnabled) {
+    this.isTLSEnabled = isTLSEnabled;
   }
 
   public String getFromEmail() {

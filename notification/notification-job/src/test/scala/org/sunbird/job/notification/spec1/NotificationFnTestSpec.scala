@@ -41,7 +41,7 @@ class NotificationFnTestSpec extends BaseTestSpec {
     private var smsProvider: ISmsProvider = _
     val config: Config = ConfigFactory.load("test.conf")
     lazy val jobConfig = new NotificationConfig(config)
-    val emailConfig = new EmailConfig(jobConfig.mail_server_from_email, jobConfig.mail_server_username, jobConfig.mail_server_password, jobConfig.mail_server_host, jobConfig.mail_server_port)
+    val emailConfig = new EmailConfig(jobConfig.mail_server_from_email, jobConfig.mail_server_username, jobConfig.mail_server_password, jobConfig.mail_server_host, jobConfig.mail_server_port, jobConfig.mail_server_use_tls)
     
     val httpUtil = new HttpUtil
     val mockHttpUtil:HttpUtil = mock[HttpUtil](Mockito.withSettings().serializable())
