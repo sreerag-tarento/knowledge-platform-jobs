@@ -46,6 +46,7 @@ middleware_consumption_table: "user_content_consumption"
 middleware_user_activity_agg_table: "user_activity_agg"
 activity_agg_checkpointing_interval: 300000
 activity_agg_checkpointing_pause_interval: 90000
+activity_agg_restart_strategy_delay: 240000
 activity_agg_batch_interval: 60
 activity_agg_batch_read_size: 1
 activity_agg_batch_write_size: 10
