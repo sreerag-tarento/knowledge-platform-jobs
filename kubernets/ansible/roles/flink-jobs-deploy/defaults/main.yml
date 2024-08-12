@@ -148,6 +148,14 @@ karma_points_persist_processor_generate_certificate_parallelism: 1
 user_karma_points_table: "user_karma_points"
 user_karma_points_credit_lookup_table: "user_karma_points_credit_lookup"
 
+###  common_certificate_generator_utility Job related Vars
+common_certificate_generator_utility_consumer_parallelism: 1
+common_certificate_generator_utility_parallelism: 1
+common_certificate_generator_utility_enable_suppress_exception: false
+common_certificate_generator_utility_enable_rc_certificate: true
+registry_sunbird_keyspace: "sunbird"
+cert_registry_table: "cert_registry"
+
 ### to be removed
 job_classname: ""
 
