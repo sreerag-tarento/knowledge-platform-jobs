@@ -74,6 +74,7 @@ object SvgGenerator {
       svgTemplate
     }
     println("Got svgTemplate with relative path: " + relativePath)
+    println("storageService : " + storageService)
     val downloadableUrl = storageService.getSignedUrl(container, relativePath, 30)
     println("Got downloadable svgTemplate url: " + downloadableUrl)
     val svgFileSource: BufferedSource = Source.fromURL(downloadableUrl)
