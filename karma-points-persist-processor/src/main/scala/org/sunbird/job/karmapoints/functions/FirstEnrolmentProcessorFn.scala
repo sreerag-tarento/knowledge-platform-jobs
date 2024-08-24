@@ -51,7 +51,7 @@ class FirstEnrolmentProcessorFn(config: KarmaPointsProcessorConfig, httpUtil: Ht
     if(null == hierarchy || hierarchy.size() < 1)
       return
     val contextType = hierarchy.get(config.PRIMARY_CATEGORY).asInstanceOf[String]
-    logger.info(String.format("Enrolment check - User ID:+"+ usrId+",Context Type:"+contextType+", Context ID:" contextId))
+    logger.info(String.format("Enrolment check - User ID:+"+ usrId+",Context Type:"+contextType+", Context ID:" +contextId))
     if (doesEntryExist(usrId, contextType, config.OPERATION_TYPE_ENROLMENT, contextId)(metrics, config,u cassandraUtil)
       || !isUserFirstEnrollment(usrId)(config, cassandraUtil) || !config.COURSE.equalsIgnoreCase(contextType))
       return
