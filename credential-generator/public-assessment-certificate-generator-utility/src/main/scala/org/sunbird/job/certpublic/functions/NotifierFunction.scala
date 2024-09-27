@@ -61,10 +61,10 @@ class NotifierFunction(config: CertificateGeneratorConfig, httpUtil: HttpUtil, @
         val notifyTemplate = getNotifyTemplateFromRes(certTemplate.get(metaData.templateId))
         val ratingUrl = config.domainUrl + config.ratingMidPoint + metaData.courseId + config.ratingEndPoint
         val request = mutable.Map[String, AnyRef]("request" -> (notifyTemplate ++ mutable.Map[String, AnyRef](
-          //config.firstName -> userResponse.getOrElse(config.firstName, "").asInstanceOf[String],
+          config.firstName -> metaData.username,
           config.trainingName -> metaData.courseName,
           config.heldDate -> dateFormatter.format(metaData.issuedOn),
-          config.recipientUserIds -> List[String](metaData.userId),
+          config.recipientEmails -> List[String](metaData.userId),
           config.ratingPageUrl -> ratingUrl,
           config.body -> "email body",
           config.courseName -> metaData.courseName,
@@ -72,6 +72,8 @@ class NotifierFunction(config: CertificateGeneratorConfig, httpUtil: HttpUtil, @
           config.coursePosterImage -> metaData.coursePosterImage,
           config.profileUpdateLink -> (config.webPortalUrl + config.profileUpdateUrl)
         )))
+        val requestJson = Json.stringify(Json.toJson(request))
+        logger.info("Request: {}", requestJson)
         val response = httpUtil.post(url, ScalaJsonUtil.serialize(request))
         if (response.status == 200) {
           metrics.incCounter(config.notifiedUserCount)
