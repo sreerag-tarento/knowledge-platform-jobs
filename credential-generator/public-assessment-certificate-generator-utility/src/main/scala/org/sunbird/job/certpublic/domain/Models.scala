@@ -56,8 +56,7 @@ case class UserEnrollmentData(userId: String,
                               courseId: String,
                               courseName: String,
                               templateId: String,
-                              certificate: Certificate,
-                              assessmentId:String) {
+                              certificate: Certificate) {
   def this() = this( "", "", "", "", null)
 }
 

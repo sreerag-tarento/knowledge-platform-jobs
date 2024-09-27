@@ -14,10 +14,10 @@ import org.sunbird.incredible.processor.CertModel
 import org.sunbird.incredible.processor.store.StorageService
 import org.sunbird.incredible.processor.views.SvgGenerator
 import org.sunbird.incredible.{CertificateConfig, CertificateGenerator, JsonKeys, ScalaModuleJsonUtils}
-import org.sunbird.job.certutil.domain.Issuer
-import org.sunbird.job.certutil.domain._
-import org.sunbird.job.certutil.exceptions.ServerException
-import org.sunbird.job.certutil.task.CertificateGeneratorConfig
+import org.sunbird.job.certpublic.domain.Issuer
+import org.sunbird.job.certpublic.domain._
+import org.sunbird.job.certpublic.exceptions.ServerException
+import org.sunbird.job.certpublic.task.CertificateGeneratorConfig
 import org.sunbird.job.exception.InvalidEventException
 import org.sunbird.job.util.{CassandraUtil, ElasticSearchUtil, HttpUtil, JSONUtil, ScalaJsonUtil}
 
@@ -30,7 +30,7 @@ import java.util
 import java.util.stream.Collectors
 import java.util.{Base64, Date, UUID}
 import scala.collection.JavaConverters._
-import org.sunbird.job.certutil.domain.{BEJobRequestEvent, EventObjectCourseCertificate}
+import org.sunbird.job.certpublic.domain.{BEJobRequestEvent, EventObjectCourseCertificate}
 
 
 class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil: HttpUtil, storageService: StorageService, @transient var cassandraUtil: CassandraUtil = null)
@@ -113,7 +113,7 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
         val related = event.related
         val userEnrollmentData = UserEnrollmentData(certModel.identifier,
           related.getOrElse(config.COURSE_ID, "").asInstanceOf[String], event.courseName, event.templateId,
-          Certificate(uuid, event.name, qrMap.accessCode, formatter.format(new Date()), "", ""),event.assessmentId)
+          Certificate(uuid, event.name, qrMap.accessCode, formatter.format(new Date()), "",""))
         updateUserEnrollmentTable(event, userEnrollmentData, context)
         metrics.incCounter(config.successEventCount)
       } finally {
@@ -280,7 +280,7 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
                                 context: KeyedProcessFunction[String, Event, String]#Context)(implicit metrics: Metrics): Unit = {
     logger.info("updating user enrollment table {}", certMetaData)
     val primaryFields = Map(config.dbEmailId.toLowerCase() -> certMetaData.userId,
-      config.dbAssessmentId.toLowerCase -> certMetaData.assessmentId)
+      config.dbAssessmentId.toLowerCase -> event.assessmentId)
     val records = getIssuedCertificatesFromUserEnrollmentTable(primaryFields)
     if (records.nonEmpty) {
       records.foreach((row: Row) => {
@@ -300,7 +300,7 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
         else Map[String, String]()}
         ))
         
-        val query = getUpdateIssuedCertQuery(updatedCerts, certMetaData.userId, certMetaData.assessmentId, config)
+        val query = getUpdateIssuedCertQuery(updatedCerts, certMetaData.userId, event.assessmentId, config)
         logger.info("update query {}", query.toString)
         val result = cassandraUtil.update(query)
         logger.info("update result {}", result)
