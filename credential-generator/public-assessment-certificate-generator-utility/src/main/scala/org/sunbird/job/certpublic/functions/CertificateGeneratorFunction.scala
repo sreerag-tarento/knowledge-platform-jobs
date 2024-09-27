@@ -334,7 +334,7 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
   def getUpdateIssuedCertQuery(updatedCerts: util.List[util.Map[String, String]], userId: String, assessmentId: String, config: CertificateGeneratorConfig):
   Update.Where = QueryBuilder.update(config.dbKeyspace, config.dbEnrollmentTable).where()
     .`with`(QueryBuilder.set(config.issued_certificates, updatedCerts))
-    .where(QueryBuilder.eq(config.userId.toLowerCase, userId))
+    .where(QueryBuilder.eq(config.dbEmailId.toLowerCase, userId))
     .and(QueryBuilder.eq(config.dbAssessmentId.toLowerCase, assessmentId))
     //.and(QueryBuilder.eq(config.batchId.toLowerCase, batchId))
 
