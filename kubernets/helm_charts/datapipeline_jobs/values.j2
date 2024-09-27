@@ -319,6 +319,7 @@ questionset-publish:
     kafka {
       input.topic = {{ env_name }}.assessment.publish.request
       post_publish.topic = {{ env_name }}.content.postpublish.request
+      output.postquestionsetpublish.topic = {{env_name}}.questionset.postpublish
       groupId = {{ env_name }}-questionset-publish-group
     }
     task {
