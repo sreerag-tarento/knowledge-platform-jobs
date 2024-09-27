@@ -1,4 +1,4 @@
-package org.sunbird.job.certutil.domain
+package org.sunbird.job.certpublic.domain
 
 import java.util
 import java.util.UUID
@@ -56,7 +56,8 @@ case class UserEnrollmentData(userId: String,
                               courseId: String,
                               courseName: String,
                               templateId: String,
-                              certificate: Certificate) {
+                              certificate: Certificate,
+                              assessmentId:String) {
   def this() = this( "", "", "", "", null)
 }
 

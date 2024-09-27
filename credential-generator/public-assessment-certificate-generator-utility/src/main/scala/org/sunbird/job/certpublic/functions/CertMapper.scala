@@ -1,4 +1,4 @@
-package org.sunbird.job.certutil.functions
+package org.sunbird.job.certpublic.functions
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter

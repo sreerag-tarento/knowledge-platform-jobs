@@ -1,4 +1,4 @@
-package org.sunbird.job.certutil.functions
+package org.sunbird.job.certpublic.functions
 
 import com.datastax.driver.core.querybuilder.{QueryBuilder, Update}
 import com.datastax.driver.core.{Row, TypeTokens}
@@ -113,7 +113,7 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
         val related = event.related
         val userEnrollmentData = UserEnrollmentData(certModel.identifier,
           related.getOrElse(config.COURSE_ID, "").asInstanceOf[String], event.courseName, event.templateId,
-          Certificate(uuid, event.name, qrMap.accessCode, formatter.format(new Date()), "", ""))
+          Certificate(uuid, event.name, qrMap.accessCode, formatter.format(new Date()), "", ""),event.assessmentId)
         updateUserEnrollmentTable(event, userEnrollmentData, context)
         metrics.incCounter(config.successEventCount)
       } finally {
@@ -276,9 +276,11 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
     }
   }
 
-  def updateUserEnrollmentTable(event: Event, certMetaData: UserEnrollmentData, context: KeyedProcessFunction[String, Event, String]#Context)(implicit metrics: Metrics): Unit = {
+  def updateUserEnrollmentTable(event: Event, certMetaData: UserEnrollmentData,
+                                context: KeyedProcessFunction[String, Event, String]#Context)(implicit metrics: Metrics): Unit = {
     logger.info("updating user enrollment table {}", certMetaData)
-    val primaryFields = Map(config.dbEmailId.toLowerCase() -> certMetaData.userId, config.dbAssessmentId.toLowerCase -> certMetaData.courseId)
+    val primaryFields = Map(config.dbEmailId.toLowerCase() -> certMetaData.userId,
+      config.dbAssessmentId.toLowerCase -> certMetaData.assessmentId)
     val records = getIssuedCertificatesFromUserEnrollmentTable(primaryFields)
     if (records.nonEmpty) {
       records.foreach((row: Row) => {
@@ -298,7 +300,7 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
         else Map[String, String]()}
         ))
         
-        val query = getUpdateIssuedCertQuery(updatedCerts, certMetaData.userId, certMetaData.courseId, config)
+        val query = getUpdateIssuedCertQuery(updatedCerts, certMetaData.userId, certMetaData.assessmentId, config)
         logger.info("update query {}", query.toString)
         val result = cassandraUtil.update(query)
         logger.info("update result {}", result)
@@ -329,11 +331,11 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
   /**
     * returns query for updating issued_certificates in user_enrollment table
     */
-  def getUpdateIssuedCertQuery(updatedCerts: util.List[util.Map[String, String]], userId: String, courseId: String, config: CertificateGeneratorConfig):
+  def getUpdateIssuedCertQuery(updatedCerts: util.List[util.Map[String, String]], userId: String, assessmentId: String, config: CertificateGeneratorConfig):
   Update.Where = QueryBuilder.update(config.dbKeyspace, config.dbEnrollmentTable).where()
     .`with`(QueryBuilder.set(config.issued_certificates, updatedCerts))
     .where(QueryBuilder.eq(config.userId.toLowerCase, userId))
-    .and(QueryBuilder.eq(config.courseId.toLowerCase, courseId))
+    .and(QueryBuilder.eq(config.dbAssessmentId.toLowerCase, assessmentId))
     //.and(QueryBuilder.eq(config.batchId.toLowerCase, batchId))
 
 

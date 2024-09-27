@@ -1,4 +1,4 @@
-package org.sunbird.job.certutil.functions
+package org.sunbird.job.certpublic.functions
 
 import com.datastax.driver.core.TypeTokens
 import com.datastax.driver.core.querybuilder.QueryBuilder

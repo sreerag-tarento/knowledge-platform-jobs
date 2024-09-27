@@ -1,4 +1,4 @@
-package org.sunbird.job.certutil.functions
+package org.sunbird.job.certpublic.functions
 
 import java.lang.reflect.Type
 import java.text.SimpleDateFormat
