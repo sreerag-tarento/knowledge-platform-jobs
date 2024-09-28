@@ -1001,7 +1001,7 @@ assessment-public-certificate-generator:
     }
     lms-cassandra {
       keyspace = "{{ middleware_course_keyspace }}"
-      user_enrolments.table = "user_external_enrolments"
+      user_enrolments.table = "public_user_assessment_data"
       course_batch.table = "{{ middleware_course_batch_table }}"
       sbkeyspace = "{{ registry_sunbird_keyspace }}"
       certreg.table ="{{ cert_registry_table }}"
