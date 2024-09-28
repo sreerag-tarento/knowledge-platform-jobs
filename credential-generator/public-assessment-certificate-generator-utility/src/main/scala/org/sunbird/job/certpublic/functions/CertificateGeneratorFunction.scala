@@ -114,7 +114,7 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
         val userEnrollmentData = UserEnrollmentData(certModel.identifier,
           related.getOrElse(config.COURSE_ID, "").asInstanceOf[String], event.courseName, event.templateId,
           Certificate(uuid, event.name, qrMap.accessCode, formatter.format(new Date()), "",""))
-        //updateUserEnrollmentTable(event, userEnrollmentData, context)
+        updateUserEnrollmentTable(event, userEnrollmentData, context)
         metrics.incCounter(config.successEventCount)
       } finally {
         cleanUp(uuid, directory)
