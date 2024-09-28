@@ -284,7 +284,7 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
     val records = getIssuedCertificatesFromUserEnrollmentTable(primaryFields)
     if (records.nonEmpty) {
       records.foreach((row: Row) => {
-        val issuedOn = row.getTimestamp("completedOn")
+        val issuedOn = row.getTimestamp("endtime")
         var certificatesList = row.getList(config.issued_certificates, TypeTokens.mapOf(classOf[String], classOf[String]))
         if (null == certificatesList && certificatesList.isEmpty) {
           certificatesList = new util.ArrayList[util.Map[String, String]]()
