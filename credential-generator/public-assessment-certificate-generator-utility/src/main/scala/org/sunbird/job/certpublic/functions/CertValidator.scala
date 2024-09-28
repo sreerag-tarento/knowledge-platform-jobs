@@ -179,8 +179,8 @@ class CertValidator() {
   
   def isNotIssued(event: Event)(config: CertificateGeneratorConfig, metrics: Metrics, cassandraUtil: CassandraUtil):Boolean = {
     val query = QueryBuilder.select( "issued_certificates").from(config.dbKeyspace, config.dbEnrollmentTable)
-      .where(QueryBuilder.eq(config.dbEmailId, event.eData.getOrElse("email", "")))
-      .and(QueryBuilder.eq(config.dbAssessmentId, event.related.getOrElse("assessmentid", "")))
+      .where(QueryBuilder.eq(config.dbEmailId, event.eData.getOrElse("userId", "")))
+      .and(QueryBuilder.eq(config.dbAssessmentId, event.related.getOrElse("assessmentId", "")))
     val row = cassandraUtil.findOne(query.toString)
     metrics.incCounter(config.enrollmentDbReadCount)
     if (null != row) {
