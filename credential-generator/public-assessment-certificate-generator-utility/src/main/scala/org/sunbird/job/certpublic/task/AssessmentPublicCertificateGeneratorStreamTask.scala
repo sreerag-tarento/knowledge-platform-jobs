@@ -20,6 +20,7 @@ class AssessmentPublicCertificateGeneratorStreamTask(config: CertificateGenerato
 
   def process(): Unit = {
     implicit val env: StreamExecutionEnvironment = FlinkUtil.getExecutionContext(config)
+    //implicit val env: StreamExecutionEnvironment = StreamExecutionEnvironment.createLocalEnvironment()
     implicit val eventTypeInfo: TypeInformation[Event] = TypeExtractor.getForClass(classOf[Event])
     implicit val mapTypeInfo: TypeInformation[util.Map[String, AnyRef]] = TypeExtractor.getForClass(classOf[util.Map[String, AnyRef]])
     implicit val stringTypeInfo: TypeInformation[String] = TypeExtractor.getForClass(classOf[String])
@@ -38,10 +39,10 @@ class AssessmentPublicCertificateGeneratorStreamTask(config: CertificateGenerato
       .uid("public-assessment-certificate-generator-utility")
       .setParallelism(config.parallelism)
 
-    processStreamTask.getSideOutput(config.auditEventOutputTag)
-      .addSink(kafkaConnector.kafkaStringSink(config.kafkaAuditEventTopic))
-      .name(config.certificateGeneratorAuditProducer)
-      .uid(config.certificateGeneratorAuditProducer)
+     //  processStreamTask.getSideOutput(config.auditEventOutputTag)
+    //    .addSink(kafkaConnector.kafkaStringSink(config.kafkaAuditEventTopic))
+   //    .name(config.certificateGeneratorAuditProducer)
+  //    .uid(config.certificateGeneratorAuditProducer)
 
     processStreamTask.getSideOutput(config.notifierOutputTag)
       .process(new NotifierFunction(config, httpUtil))
