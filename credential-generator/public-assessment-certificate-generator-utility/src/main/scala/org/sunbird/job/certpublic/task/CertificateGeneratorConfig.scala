@@ -1,4 +1,4 @@
-package org.sunbird.job.certutil.task
+package org.sunbird.job.certpublic.task
 
 import java.util
 
@@ -7,7 +7,7 @@ import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.api.java.typeutils.TypeExtractor
 import org.apache.flink.streaming.api.scala.OutputTag
 import org.sunbird.job.BaseJobConfig
-import org.sunbird.job.certutil.functions.{NotificationMetaData, UserFeedMetaData}
+import org.sunbird.job.certpublic.functions.{NotificationMetaData, UserFeedMetaData}
 
 class CertificateGeneratorConfig(override val config: Config) extends BaseJobConfig(config, "collection-certificate-generator") {
 
@@ -183,4 +183,6 @@ class CertificateGeneratorConfig(override val config: Config) extends BaseJobCon
   val webPortalUrl: String = config.getString("web.portal.url")
 
   val enableUserNotification: Boolean = if(config.hasPath("enable.user.email.notification")) config.getBoolean("enable.user.email.notification") else true
+
+  val recipientEmails = "recipientEmails"
 }
