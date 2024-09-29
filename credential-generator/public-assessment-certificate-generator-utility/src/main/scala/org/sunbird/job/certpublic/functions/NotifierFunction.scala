@@ -128,7 +128,7 @@ class NotifierFunction(config: CertificateGeneratorConfig, httpUtil: HttpUtil, @
     */
   private def getNotificationTemplates(columns: Map[String, AnyRef], metrics: Metrics): Row = {
     val selectWhere: Select.Where = QueryBuilder.select().all()
-      .from(config.dbKeyspace, config.extConfTable).
+      .from("sunbird_courses", config.extConfTable).
       where()
     columns.map(col => {
       col._2 match {
