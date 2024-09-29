@@ -279,12 +279,13 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
   def updateUserEnrollmentTable(event: Event, certMetaData: UserEnrollmentData,
                                 context: KeyedProcessFunction[String, Event, String]#Context)(implicit metrics: Metrics): Unit = {
     logger.info("updating user enrollment table {}", certMetaData)
-    val primaryFields = Map(config.dbEmailId.toLowerCase() ->  new EncryptService(config).encryptData(certMetaData.userId),
-      config.dbAssessmentId.toLowerCase -> event.assessmentId)
+    val primaryFields = Map(config.dbEmailId.toLowerCase() ->  new EncryptionService().encryptData(certMetaData.userId),
+      config.dbAssessmentId.toLowerCase -> event.assessmentId, "contextid" -> event.courseId)
     val records = getIssuedCertificatesFromUserEnrollmentTable(primaryFields)
     if (records.nonEmpty) {
       records.foreach((row: Row) => {
         val issuedOn = row.getTimestamp("endtime")
+        val startTime = row.getTimestamp("starttime")
         var certificatesList = row.getList(config.issued_certificates, TypeTokens.mapOf(classOf[String], classOf[String]))
         if (null == certificatesList && certificatesList.isEmpty) {
           certificatesList = new util.ArrayList[util.Map[String, String]]()
@@ -300,8 +301,8 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
         else Map[String, String]()}
         ))
         
-        val query = getUpdateIssuedCertQuery(updatedCerts, new EncryptService(config).encryptData(certMetaData.userId)
-          , event.assessmentId, config)
+        val query = getUpdateIssuedCertQuery(updatedCerts, new EncryptionService().encryptData(certMetaData.userId)
+          , event.assessmentId, config,event.courseId,startTime.getTime)
         logger.info("update query {}", query.toString)
         //val result = cassandraUtil.update(query)
         //logger.info("update result {}", result)
@@ -332,12 +333,15 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
   /**
     * returns query for updating issued_certificates in user_enrollment table
     */
-  def getUpdateIssuedCertQuery(updatedCerts: util.List[util.Map[String, String]], userId: String, assessmentId: String, config: CertificateGeneratorConfig):
+  def getUpdateIssuedCertQuery(updatedCerts: util.List[util.Map[String, String]], userId: String, assessmentId: String, config: CertificateGeneratorConfig,contextId:String,startTime:Long):
   Update.Where = QueryBuilder.update(config.dbKeyspace, config.dbEnrollmentTable).where()
     .`with`(QueryBuilder.set(config.issued_certificates, updatedCerts))
-    .where(QueryBuilder.eq(config.dbEmailId.toLowerCase, new EncryptService(config).encryptData(userId)))
+    .where(QueryBuilder.eq(config.dbEmailId.toLowerCase, new EncryptionService().encryptData(userId)))
     .and(QueryBuilder.eq(config.dbAssessmentId.toLowerCase, assessmentId))
-    //.and(QueryBuilder.eq(config.batchId.toLowerCase, batchId))
+    .and(QueryBuilder.eq("contextid", contextId))
+    .and(QueryBuilder.eq("startTime", startTime))
+
+  //.and(QueryBuilder.eq(config.batchId.toLowerCase, batchId))
 
 
   private def getIssuedCertificatesFromUserEnrollmentTable(columns: Map[String, AnyRef])(implicit metrics: Metrics) = {
