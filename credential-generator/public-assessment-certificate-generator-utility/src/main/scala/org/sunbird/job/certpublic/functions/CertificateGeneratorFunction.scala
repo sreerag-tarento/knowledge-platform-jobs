@@ -279,7 +279,7 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
   def updateUserEnrollmentTable(event: Event, certMetaData: UserEnrollmentData,
                                 context: KeyedProcessFunction[String, Event, String]#Context)(implicit metrics: Metrics): Unit = {
     logger.info("updating user enrollment table {}", certMetaData)
-    val primaryFields = Map(config.dbEmailId.toLowerCase() ->  new EncryptionService().encryptData(certMetaData.userId),
+    val primaryFields = Map(config.dbUserId.toLowerCase() ->  new EncryptionService().encryptData(certMetaData.userId),
       config.dbAssessmentId.toLowerCase -> event.assessmentId, "contextid" -> event.courseId)
     val records = getIssuedCertificatesFromUserEnrollmentTable(primaryFields)
     if (records.nonEmpty) {
@@ -336,7 +336,7 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
   def getUpdateIssuedCertQuery(updatedCerts: util.List[util.Map[String, String]], userId: String, assessmentId: String, config: CertificateGeneratorConfig,contextId:String,startTime:Long):
   Update.Where = QueryBuilder.update(config.dbKeyspace, config.dbEnrollmentTable).where()
     .`with`(QueryBuilder.set(config.issued_certificates, updatedCerts))
-    .where(QueryBuilder.eq(config.dbEmailId.toLowerCase, new EncryptionService().encryptData(userId)))
+    .where(QueryBuilder.eq(config.dbUserId.toLowerCase, new EncryptionService().encryptData(userId)))
     .and(QueryBuilder.eq(config.dbAssessmentId.toLowerCase, assessmentId))
     .and(QueryBuilder.eq("contextid", contextId))
     .and(QueryBuilder.eq("startTime", startTime))
