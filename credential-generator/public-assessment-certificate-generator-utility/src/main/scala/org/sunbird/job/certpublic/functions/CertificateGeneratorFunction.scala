@@ -279,7 +279,7 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
   def updateUserEnrollmentTable(event: Event, certMetaData: UserEnrollmentData,
                                 context: KeyedProcessFunction[String, Event, String]#Context)(implicit metrics: Metrics): Unit = {
     logger.info("updating user enrollment table {}", certMetaData)
-    val primaryFields = Map(config.dbEmailId.toLowerCase() -> certMetaData.userId,
+    val primaryFields = Map(config.dbEmailId.toLowerCase() ->  new EncryptService(config).encryptData(certMetaData.userId),
       config.dbAssessmentId.toLowerCase -> event.assessmentId)
     val records = getIssuedCertificatesFromUserEnrollmentTable(primaryFields)
     if (records.nonEmpty) {
@@ -300,7 +300,8 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
         else Map[String, String]()}
         ))
         
-        val query = getUpdateIssuedCertQuery(updatedCerts, certMetaData.userId, event.assessmentId, config)
+        val query = getUpdateIssuedCertQuery(updatedCerts, new EncryptService(config).encryptData(certMetaData.userId)
+          , event.assessmentId, config)
         logger.info("update query {}", query.toString)
         //val result = cassandraUtil.update(query)
         //logger.info("update result {}", result)
@@ -334,7 +335,7 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
   def getUpdateIssuedCertQuery(updatedCerts: util.List[util.Map[String, String]], userId: String, assessmentId: String, config: CertificateGeneratorConfig):
   Update.Where = QueryBuilder.update(config.dbKeyspace, config.dbEnrollmentTable).where()
     .`with`(QueryBuilder.set(config.issued_certificates, updatedCerts))
-    .where(QueryBuilder.eq(config.dbEmailId.toLowerCase, userId))
+    .where(QueryBuilder.eq(config.dbEmailId.toLowerCase, new EncryptService(config).encryptData(userId)))
     .and(QueryBuilder.eq(config.dbAssessmentId.toLowerCase, assessmentId))
     //.and(QueryBuilder.eq(config.batchId.toLowerCase, batchId))
 
