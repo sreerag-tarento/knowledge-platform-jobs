@@ -1000,7 +1000,7 @@ assessment-public-certificate-generator:
       notifier.parallelism = {{ assessment_public_certificate_generator_notifier_parallelism }}
     }
     lms-cassandra {
-      keyspace = "{{ middleware_course_keyspace }}"
+      keyspace = "{{ registry_sunbird_keyspace }}"
       user_enrolments.table = "public_user_assessment_data"
       course_batch.table = "{{ middleware_course_batch_table }}"
       sbkeyspace = "{{ registry_sunbird_keyspace }}"
@@ -1023,6 +1023,7 @@ assessment-public-certificate-generator:
     }
     enable.suppress.exception = {{ assessment_public_certificate_generator_enable_suppress_exception | lower }}
     enable.rc.certificate = false
+    encryption.key="{{public_assessment_service_encryption_key}}"
 
   flink-conf: |+
     jobmanager.memory.flink.size: {{ flink_job_names['assessment-public-certificate-generator'].jobmanager_memory }}
