@@ -20,6 +20,6 @@ import org.sunbird.job.{BaseProcessFunction, Metrics}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-case class PostProcessOutputMetaData(userId: String, assessmentId: String,courseId: String)
+case class PostProcessOutputMetaData(userid: String, assessmentid: String,courseid: String)
 
 class PostProcessFunction()
