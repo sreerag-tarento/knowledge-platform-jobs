@@ -7,6 +7,21 @@ import java.security.Key;
 
 public class EncryptionService {
 
+    private String encryption_key ="";
+    private EncryptionService(String encryption_key){
+        this.encryption_key = encryption_key;
+    }
+    // Private static instance of the singleton
+    private static EncryptionService instance;
+
+    // Public static method to get the singleton instance
+    public static EncryptionService getInstance(String encryption_key) {
+        if (instance == null) {
+            instance = new EncryptionService(encryption_key);
+        }
+        return instance;
+    }
+
     private static Cipher c;
     static String ALGORITHM = "AES";
     int ITERATIONS = 3;
