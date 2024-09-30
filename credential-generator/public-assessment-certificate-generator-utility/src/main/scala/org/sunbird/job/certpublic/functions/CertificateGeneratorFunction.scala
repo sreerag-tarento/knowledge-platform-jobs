@@ -304,8 +304,8 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
         val query = getUpdateIssuedCertQuery(updatedCerts, new EncryptionService().encryptData(certMetaData.userId)
           , event.assessmentId, config,event.courseId,startTime.getTime)
         logger.info("update query {}", query.toString)
-        //val result = cassandraUtil.update(query)
-        //logger.info("update result {}", result)
+        val result = cassandraUtil.update(query)
+        logger.info("update result {}", result)
         if (true) {
           logger.info("issued certificates in user-enrollment table  updated successfully")
           metrics.incCounter(config.dbUpdateCount)
@@ -318,6 +318,8 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
             context.output(config.notifierOutputTag, NotificationMetaData(certMetaData.userId, certMetaData.courseName, issuedOn, certMetaData.courseId,
                certMetaData.templateId, event.partition, event.offset, event.providerName, event.coursePosterImage,event.recipientName))
           }
+
+          context.output(config.postProcessorOutputTag, ScalaJsonUtil.serialize(PostProcessOutputMetaData(certMetaData.userId, event.assessmentId, event.courseId)))
           //context.output(config.userFeedOutputTag, UserFeedMetaData(certMetaData.userId, certMetaData.courseName, issuedOn, certMetaData.courseId, event.partition, event.offset))
         } else {
           metrics.incCounter(config.failedEventCount)
