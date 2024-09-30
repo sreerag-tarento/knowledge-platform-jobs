@@ -23,7 +23,7 @@ class EncryptService(config: CertificateGeneratorConfig) {
 
   def main(args: Array[String]): Unit = {
     val encryptService = new EncryptService(config)
-    val emailData = "user@example.com"
+    val emailData = "7MGqvsCCCif@ymail.com"
     val encryptedEmail = encryptService.encryptData(emailData)
     println(s"Encrypted Email Data: $encryptedEmail")
   }
@@ -31,7 +31,7 @@ class EncryptService(config: CertificateGeneratorConfig) {
   @throws[Exception]
   def encryptData(value: String): String = {
     var valueToEnc: String = null
-    val encryptionKey:String =config.encryptionKey
+    val encryptionKey: String = config.encryptionKey
     var eValue = value
     for (_ <- 0 until ITERATIONS) {
       valueToEnc = encryptionKey + eValue
@@ -41,5 +41,4 @@ class EncryptService(config: CertificateGeneratorConfig) {
     }
     eValue
   }
-
 }

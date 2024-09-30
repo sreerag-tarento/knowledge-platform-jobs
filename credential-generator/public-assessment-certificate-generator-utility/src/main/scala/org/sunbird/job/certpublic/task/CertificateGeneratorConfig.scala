@@ -7,7 +7,7 @@ import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.api.java.typeutils.TypeExtractor
 import org.apache.flink.streaming.api.scala.OutputTag
 import org.sunbird.job.BaseJobConfig
-import org.sunbird.job.certpublic.functions.{NotificationMetaData, UserFeedMetaData}
+import org.sunbird.job.certpublic.functions.{NotificationMetaData, UserFeedMetaData,PostProcessOutputMetaData}
 
 class CertificateGeneratorConfig(override val config: Config) extends BaseJobConfig(config, "collection-certificate-generator") {
 
@@ -17,16 +17,19 @@ class CertificateGeneratorConfig(override val config: Config) extends BaseJobCon
   implicit val stringTypeInfo: TypeInformation[String] = TypeExtractor.getForClass(classOf[String])
   implicit val notificationMetaTypeInfo: TypeInformation[NotificationMetaData] = TypeExtractor.getForClass(classOf[NotificationMetaData])
   implicit val userFeeMetaTypeInfo: TypeInformation[UserFeedMetaData] = TypeExtractor.getForClass(classOf[UserFeedMetaData])
+  implicit val postProcessOutputMetaData: TypeInformation[PostProcessOutputMetaData] = TypeExtractor.getForClass(classOf[PostProcessOutputMetaData])
 
   // Kafka Topics Configuration
   val kafkaInputTopic: String = config.getString("kafka.input.topic")
   val kafkaAuditEventTopic: String = config.getString("kafka.output.audit.topic")
+  val kafkaPostProcessorEventTopic: String = config.getString("kafka.output.postprocess.topic")
 
   val enableSuppressException: Boolean = if(config.hasPath("enable.suppress.exception")) config.getBoolean("enable.suppress.exception") else false
   val enableRcCertificate: Boolean = if(config.hasPath("enable.rc.certificate")) config.getBoolean("enable.rc.certificate") else false
 
   // Producers
   val certificateGeneratorAuditProducer = "collection-certificate-generator-audit-events-sink"
+  val certificateGeneratorPostProcessorProducer = "post-process-public-assessment-cert-generation"
 
   override val kafkaConsumerParallelism: Int = config.getInt("task.consumer.parallelism")
   val notifierParallelism: Int = if(config.hasPath("task.notifier.parallelism")) config.getInt("task.notifier.parallelism") else 1
@@ -167,7 +170,8 @@ class CertificateGeneratorConfig(override val config: Config) extends BaseJobCon
   val auditEventOutputTag: OutputTag[String] = OutputTag[String](auditEventOutputTagName)
   val notifierOutputTag: OutputTag[NotificationMetaData] = OutputTag[NotificationMetaData]("notifier")
   val userFeedOutputTag: OutputTag[UserFeedMetaData] = OutputTag[UserFeedMetaData]("user-feed")
-  
+  val postProcessorOutputTag: OutputTag[String] = OutputTag[String]("post-processor")
+
   //UserFeed constants
   val priority: String = "priority"
   val userFeedMsg: String = "You have earned a certificate! Download it from your profile page."

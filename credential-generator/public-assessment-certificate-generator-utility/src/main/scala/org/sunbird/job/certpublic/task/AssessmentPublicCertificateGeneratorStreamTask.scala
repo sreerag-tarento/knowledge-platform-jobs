@@ -12,20 +12,21 @@ import org.sunbird.incredible.StorageParams
 import org.sunbird.incredible.pojos.exceptions.ServerException
 import org.sunbird.incredible.processor.store.StorageService
 import org.sunbird.job.certpublic.domain.Event
-import org.sunbird.job.certpublic.functions.{CertificateGeneratorFunction, CreateUserFeedFunction, NotificationMetaData, NotifierFunction, UserFeedMetaData}
+import org.sunbird.job.certpublic.functions.{PostProcessOutputMetaData,CertificateGeneratorFunction, CreateUserFeedFunction, NotificationMetaData, NotifierFunction, UserFeedMetaData}
 import org.sunbird.job.connector.FlinkKafkaConnector
 import org.sunbird.job.util.{FlinkUtil, HttpUtil}
 
 class AssessmentPublicCertificateGeneratorStreamTask(config: CertificateGeneratorConfig, kafkaConnector: FlinkKafkaConnector, httpUtil: HttpUtil, storageService: StorageService) {
 
   def process(): Unit = {
-    implicit val env: StreamExecutionEnvironment = FlinkUtil.getExecutionContext(config)
+   implicit val env: StreamExecutionEnvironment = FlinkUtil.getExecutionContext(config)
     //implicit val env: StreamExecutionEnvironment = StreamExecutionEnvironment.createLocalEnvironment()
     implicit val eventTypeInfo: TypeInformation[Event] = TypeExtractor.getForClass(classOf[Event])
     implicit val mapTypeInfo: TypeInformation[util.Map[String, AnyRef]] = TypeExtractor.getForClass(classOf[util.Map[String, AnyRef]])
     implicit val stringTypeInfo: TypeInformation[String] = TypeExtractor.getForClass(classOf[String])
     implicit val notificationMetaTypeInfo: TypeInformation[NotificationMetaData] = TypeExtractor.getForClass(classOf[NotificationMetaData])
     implicit val userFeedMetaTypeInfo: TypeInformation[UserFeedMetaData] = TypeExtractor.getForClass(classOf[UserFeedMetaData])
+    implicit val postProcessOutputMetaData: TypeInformation[PostProcessOutputMetaData] = TypeExtractor.getForClass(classOf[PostProcessOutputMetaData])
 
     val source = kafkaConnector.kafkaJobRequestSource[Event](config.kafkaInputTopic)
 
@@ -44,17 +45,22 @@ class AssessmentPublicCertificateGeneratorStreamTask(config: CertificateGenerato
    //    .name(config.certificateGeneratorAuditProducer)
   //    .uid(config.certificateGeneratorAuditProducer)
 
-    processStreamTask.getSideOutput(config.notifierOutputTag)
-      .process(new NotifierFunction(config, httpUtil))
-      .name("notifier")
-      .uid("notifier")
-      .setParallelism(config.notifierParallelism)
+  //  processStreamTask.getSideOutput(config.notifierOutputTag)
+  //    .process(new NotifierFunction(config, httpUtil))
+  //    .name("notifier")
+   //   .uid("notifier")
+   //   .setParallelism(config.notifierParallelism)
 
    //  processStreamTask.getSideOutput(config.userFeedOutputTag)
     //    .process(new CreateUserFeedFunction(config, httpUtil))
    //    .name("user-feed")
     //   .uid("user-feed")
    //   .setParallelism(config.userFeedParallelism)
+
+      processStreamTask.getSideOutput(config.postProcessorOutputTag)
+      .addSink(kafkaConnector.kafkaStringSink(config.kafkaPostProcessorEventTopic))
+        .name(config.certificateGeneratorPostProcessorProducer)
+       .uid(config.certificateGeneratorPostProcessorProducer)
 
     env.execute(config.jobName)
   }

@@ -279,12 +279,13 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
   def updateUserEnrollmentTable(event: Event, certMetaData: UserEnrollmentData,
                                 context: KeyedProcessFunction[String, Event, String]#Context)(implicit metrics: Metrics): Unit = {
     logger.info("updating user enrollment table {}", certMetaData)
-    val primaryFields = Map(config.dbEmailId.toLowerCase() ->  new EncryptService(config).encryptData(certMetaData.userId),
-      config.dbAssessmentId.toLowerCase -> event.assessmentId)
+    val primaryFields = Map(config.dbUserId.toLowerCase() ->  EncryptionService.getInstance(config.encryptionKey).encryptData(certMetaData.userId),
+      config.dbAssessmentId.toLowerCase -> event.assessmentId, "contextid" -> event.courseId)
     val records = getIssuedCertificatesFromUserEnrollmentTable(primaryFields)
     if (records.nonEmpty) {
       records.foreach((row: Row) => {
         val issuedOn = row.getTimestamp("endtime")
+        val startTime = row.getTimestamp("starttime")
         var certificatesList = row.getList(config.issued_certificates, TypeTokens.mapOf(classOf[String], classOf[String]))
         if (null == certificatesList && certificatesList.isEmpty) {
           certificatesList = new util.ArrayList[util.Map[String, String]]()
@@ -300,11 +301,11 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
         else Map[String, String]()}
         ))
         
-        val query = getUpdateIssuedCertQuery(updatedCerts, new EncryptService(config).encryptData(certMetaData.userId)
-          , event.assessmentId, config)
+        val query = getUpdateIssuedCertQuery(updatedCerts, EncryptionService.getInstance(config.encryptionKey).encryptData(certMetaData.userId)
+          , event.assessmentId, config,event.courseId,startTime.getTime)
         logger.info("update query {}", query.toString)
-        //val result = cassandraUtil.update(query)
-        //logger.info("update result {}", result)
+        val result = cassandraUtil.update(query)
+        logger.info("update result {}", result)
         if (true) {
           logger.info("issued certificates in user-enrollment table  updated successfully")
           metrics.incCounter(config.dbUpdateCount)
@@ -317,6 +318,8 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
             context.output(config.notifierOutputTag, NotificationMetaData(certMetaData.userId, certMetaData.courseName, issuedOn, certMetaData.courseId,
                certMetaData.templateId, event.partition, event.offset, event.providerName, event.coursePosterImage,event.recipientName))
           }
+
+          context.output(config.postProcessorOutputTag, ScalaJsonUtil.serialize(PostProcessOutputMetaData(certMetaData.userId, event.assessmentId, event.courseId)))
           //context.output(config.userFeedOutputTag, UserFeedMetaData(certMetaData.userId, certMetaData.courseName, issuedOn, certMetaData.courseId, event.partition, event.offset))
         } else {
           metrics.incCounter(config.failedEventCount)
@@ -332,12 +335,15 @@ class CertificateGeneratorFunction(config: CertificateGeneratorConfig, httpUtil:
   /**
     * returns query for updating issued_certificates in user_enrollment table
     */
-  def getUpdateIssuedCertQuery(updatedCerts: util.List[util.Map[String, String]], userId: String, assessmentId: String, config: CertificateGeneratorConfig):
+  def getUpdateIssuedCertQuery(updatedCerts: util.List[util.Map[String, String]], userId: String, assessmentId: String, config: CertificateGeneratorConfig,contextId:String,startTime:Long):
   Update.Where = QueryBuilder.update(config.dbKeyspace, config.dbEnrollmentTable).where()
     .`with`(QueryBuilder.set(config.issued_certificates, updatedCerts))
-    .where(QueryBuilder.eq(config.dbEmailId.toLowerCase, new EncryptService(config).encryptData(userId)))
+    .where(QueryBuilder.eq(config.dbUserId.toLowerCase,userId))
     .and(QueryBuilder.eq(config.dbAssessmentId.toLowerCase, assessmentId))
-    //.and(QueryBuilder.eq(config.batchId.toLowerCase, batchId))
+    .and(QueryBuilder.eq("contextid", contextId))
+    .and(QueryBuilder.eq("startTime", startTime))
+
+  //.and(QueryBuilder.eq(config.batchId.toLowerCase, batchId))
 
 
   private def getIssuedCertificatesFromUserEnrollmentTable(columns: Map[String, AnyRef])(implicit metrics: Metrics) = {
