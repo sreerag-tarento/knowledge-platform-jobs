@@ -183,6 +183,7 @@ class CertValidator() {
       .and(QueryBuilder.eq(config.dbAssessmentId, event.eData.getOrElse("assessmentId", "")))
       .and(QueryBuilder.eq("contextid",event.courseId)).limit(1)
     logger.info("query"+query)
+
     val row = cassandraUtil.findOne(query.toString)
     metrics.incCounter(config.enrollmentDbReadCount)
     if (null != row) {
