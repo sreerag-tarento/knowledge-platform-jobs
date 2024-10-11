@@ -3,11 +3,13 @@ package org.sunbird.job.util
 import org.sunbird.cloud.storage.BaseStorageService
 import org.sunbird.cloud.storage.factory.{StorageConfig, StorageServiceFactory}
 import org.sunbird.job.BaseJobConfig
+import org.slf4j.LoggerFactory
 
 import java.io.File
 
 class CloudStorageUtil(config: BaseJobConfig) extends Serializable {
-
+  
+  private[this] val logger = LoggerFactory.getLogger("CloudStorageUtil")
   val cloudStorageType: String = config.getString("cloud_storage_type", "azure")
   var storageService: BaseStorageService = null
   val container: String = getContainerName
