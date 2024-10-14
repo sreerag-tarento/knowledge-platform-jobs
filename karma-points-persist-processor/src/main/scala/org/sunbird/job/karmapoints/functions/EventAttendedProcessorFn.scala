@@ -63,7 +63,8 @@ class EventAttendedProcessorFn(config: KarmaPointsProcessorConfig, httpUtil: Htt
       //  val res :util.List[Row] = fetchUserBatch(event_Id,batch_Id)(config, cassandraUtil)
      //  val endDate = res.get(0).getObject(config.DB_COLUMN_END_DATE).asInstanceOf[Date]
     if(etsDate.after(endDate)) {
-       logger.info("Karma Points were not allocated as the event's endDate " + endDate + " has passed, and the event was consumed on " + etsDate + ")       return
+       logger.info("Karma Points were not allocated as the event's endDate " + endDate + " has passed, and the event was consumed on " + etsDate)
+      return
     }
     kpOnUserEventAttended(usrId , config.CONTEXT_TYPE_EVENT ,config.OPERATION_TYPE_EVENT,event_Id,eventName)(metrics)
   }
