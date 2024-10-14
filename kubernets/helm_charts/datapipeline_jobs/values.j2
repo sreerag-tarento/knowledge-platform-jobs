@@ -996,6 +996,7 @@ assessment-public-certificate-generator:
       groupId = {{ env_name }}-assessment-public-certificate-generator-group
       program.cert.output.topic= {{ env_name }}.issue.program.certificate.request
       output.postprocess.topic="{{ env_name }}.public.assessment.cert.generation.post.process"
+
     }
     task {
       restart-strategy.attempts = {{ restart_attempts }} # max 3 restart attempts
@@ -1007,6 +1008,7 @@ assessment-public-certificate-generator:
     lms-cassandra {
       keyspace = "{{ registry_sunbird_keyspace }}"
       user_enrolments.table = "{{public_assessment_service_assessment_data}}"
+
       course_batch.table = "{{ middleware_course_batch_table }}"
       sbkeyspace = "{{ registry_sunbird_keyspace }}"
       certreg.table ="{{ cert_registry_table }}"
