@@ -705,6 +705,7 @@ karma-points-persist-processor:
       input.first.login.topic = "{{ env}}.user.first.login"
       input.first.enrolment.topic = "{{ env}}.user.enrolment.event"
       input.claim.acbp.karma.points.topic = "{{ env}}.user.claim.acbp.karma.points"
+      input.event.attended.topic = "{{env}}.user.claim.event.karma.points"
       groupId = "{{ env}}-karma-points-processor-group"
     }
     task {
@@ -721,6 +722,7 @@ karma-points-persist-processor:
       firstLoginQuotaKarmaPoints = 5
       firstEnrolmentQuotaKarmaPoints = 5
       nonAcbpCourseQuota = 4
+      eventQuotaKarmaPoints = 5
     }
     cassandra {
       sunbird.keyspace = "sunbird"
@@ -733,11 +735,13 @@ karma-points-persist-processor:
       user.table = "user"
       user_karma_points_summary.table= "user_karma_points_summary"
       user_assessment_data.table = "user_assessment_data"
+      course_batch.table = "course_batch"
     }
 
     service {
       cbplan.basePath = "{{ cb_ext_service_base_url }}"
       learner.basePath = "{{ learner_service_base_url }}"
+      event.read = "{{ content_service_base_url }}event/v4/read/"
     }
     enable.suppress.exception = true
 
