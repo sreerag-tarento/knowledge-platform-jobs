@@ -15,6 +15,12 @@ import java.time.format.DateTimeFormatter
 import java.util
 import java.util.Date
 import scala.collection.convert.ImplicitConversions.`collection AsScalaIterable`
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.LocalDate
+import java.time.ZoneOffset
+import java.time.OffsetTime
+import java.time.ZoneId
 
 object Utility {
   private val logger = LoggerFactory.getLogger("org.sunbird.job.karmapoints.util.Utility")
@@ -330,5 +336,41 @@ object Utility {
     query.where(QueryBuilder.eq(config.DB_COLUMN_USERID, userId)).and(QueryBuilder.eq(config.DB_COLUMN_ASSESSMENT_ID, assessmentId))
       .limit(1)
     cassandraUtil.find(query.toString)
+  }
+
+  def fetchEventName(eventId: String, headers: Map[String, String])(
+    metrics: Metrics,
+    config: KarmaPointsProcessorConfig,
+    httpUtil: HttpUtil
+  ): (String,Date) = {
+    val apiUrl = config.cbEventReadUrl+eventId
+    val response = executeHttpGetRequest(apiUrl, headers)(config, httpUtil, metrics)
+    val event: Map[String,AnyRef] = response.getOrElse(config.EVENT, Map.empty[String,AnyRef]).asInstanceOf[Map[String,AnyRef]]
+    val endDate = event.getOrElse(config.END_DATE,"").asInstanceOf[String]
+    val endTime = event.getOrElse(config.END_TIME,"").asInstanceOf[String]
+    if(endDate.isEmpty || endTime.isEmpty)
+      logger.info("Either endDate or endTime is missing for eventId: " + eventId + ", endDate: " + endDate + ", endTime: " + endTime)   // Parse the date
+    val localDate = LocalDate.parse(endDate)
+    // Parse the time with offset
+    val offsetTime = OffsetTime.parse(endTime)
+    // Combine the local date and offset time
+    val localDateTime = LocalDateTime.of(localDate, offsetTime.toLocalTime())
+    // Convert LocalDateTime to Instant and then to java.util.Date
+    val zoneId = ZoneId.systemDefault()  // You can specify a different time zone if needed
+    val instant = localDateTime.atZone(zoneId).toInstant
+    val date = Date.from(instant)
+    (event.getOrElse(config.NAME,"").asInstanceOf[String],date)
+  }
+
+  def fetchUserBatch(courseId: String, batchId: String)(implicit
+                                                           config: KarmaPointsProcessorConfig,
+                                                           cassandraUtil: CassandraUtil
+                                      ): util.List[Row] = {
+    val batchLookupQuery: Select = QueryBuilder
+      .select()
+      .from(config.sunbird_courses_keyspace, config.course_batch_table)
+    batchLookupQuery.where(QueryBuilder.eq(config.DB_COLUMN_COURSE_ID, courseId)
+    ).and(QueryBuilder.eq(config.DB_COLUMN_BATCH_ID, batchId))
+    cassandraUtil.find(batchLookupQuery.toString)
   }
 }

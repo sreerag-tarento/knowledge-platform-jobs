@@ -15,12 +15,15 @@ class KarmaPointsProcessorConfig(override val config: Config) extends BaseJobCon
   val kafkaInputFirstLoginTopic: String = config.getString("kafka.input.first.login.topic")
   val kafkaInputFirstEnrolmentTopic: String = config.getString("kafka.input.first.enrolment.topic")
   val kafkaInputClaimACBPTopic: String = config.getString("kafka.input.claim.acbp.karma.points.topic")
+  val kafkaInputEventAttendedTopic: String = config.getString("kafka.input.event.attended.topic")
 
   val karmaPointsRatingPersistProcessorConsumer: String = "karma-points-rating-persist-consumer"
   val karmaPointsCourseCompletionPersistProcessorConsumer: String = "karma-points-course-completion-persist-consumer"
   val karmaPointsFirstLoginPersistProcessorConsumer: String = "karma-points-first-login-persist-processor-consumer"
   val karmaPointsFirstEnrolmentPersistProcessorConsumer: String = "karma-points-first-enrolment-persist-processor-consumer"
   val karmaPointsClaimACBPPersistProcessorConsumer: String = "karma-points-acbp-claim-karma-points-persist-processor-consumer"
+  val karmaPointsEventAttendedPersistProcessorConsumer: String = "karma-points-event-persist-consumer"
+
 
   override val kafkaConsumerParallelism: Int = config.getInt("task.consumer.parallelism")
 
@@ -47,6 +50,8 @@ class KarmaPointsProcessorConfig(override val config: Config) extends BaseJobCon
   val user_table: String = config.getString("cassandra.user.table")
   val user_karma_summary_table: String = config.getString("cassandra.user_karma_points_summary.table")
   val user_assessment_data_table: String = config.getString("cassandra.user_assessment_data.table")
+  val course_batch_table: String = config.getString("cassandra.course_batch.table")
+
 
   // Metric List
   val totalEventsCount = "total-events-count"
@@ -67,8 +72,9 @@ class KarmaPointsProcessorConfig(override val config: Config) extends BaseJobCon
 
   val cbPlanReadUser = cbPlanBase + "cbplan/v1/private/user/list"
 
-  val userAccBlockedErrCode = "UOS_USRRED0006"
+  val cbEventReadUrl: String = config.getString("service.event.read")
 
+  val userAccBlockedErrCode = "UOS_USRRED0006"
   val acbpQuotaKarmaPoints = config.getInt("karmapoints.acbpQuotaKarmaPoints")
   val courseCompletionQuotaKarmaPoints = config.getInt("karmapoints.courseCompletionQuotaKarmaPoints")
   val assessmentQuotaKarmaPoints = config.getInt("karmapoints.assessmentQuotaKarmaPoints")
@@ -76,6 +82,7 @@ class KarmaPointsProcessorConfig(override val config: Config) extends BaseJobCon
   val firstLoginQuotaKarmaPoints = config.getInt("karmapoints.firstLoginQuotaKarmaPoints")
   val firstEnrolmentQuotaKarmaPoints = config.getInt("karmapoints.firstEnrolmentQuotaKarmaPoints")
   val nonAcbpCourseQuota = config.getInt("karmapoints.nonAcbpCourseQuota")
+  val eventQuotaKarmaPoints = config.getInt("karmapoints.eventQuotaKarmaPoints")
 
 
   val PRIMARY_CATEGORY ="primaryCategory"
@@ -100,6 +107,10 @@ class KarmaPointsProcessorConfig(override val config: Config) extends BaseJobCon
   val DB_COLUMN_ASSESSMENT_ID= "assessmentid"
   val DB_COLUMN_START_TIME= "starttime"
   val DB_COLUMN_SUBMIT_ASSESSMENT_RESPONSE="submitassessmentresponse"
+  val DB_COLUMN_COURSE_ID= "courseid"
+  val DB_COLUMN_BATCH_ID= "batchid"
+  val DB_COLUMN_END_DATE= "end_date"
+
 
   val CHILDREN = "children"
   val COURSE_ASSESSMENT="Course Assessment"
@@ -112,11 +123,15 @@ class KarmaPointsProcessorConfig(override val config: Config) extends BaseJobCon
   val OPERATION_TYPE_FIRST_LOGIN ="FIRST_LOGIN"
   val OPERATION_TYPE_ENROLMENT:String ="FIRST_ENROLMENT"
   val OPERATION_COURSE_COMPLETION = "COURSE_COMPLETION"
-
+  val OPERATION_TYPE_EVENT ="EVENT_ATTENDED"
+  val CONTEXT_TYPE_EVENT ="EVENT"
   val ADDINFO_ASSESSMENT="ASSESSMENT"
   val ADDINFO_ACBP="ACBP"
   val ADDINFO_COURSENAME="COURSENAME"
   val ADDINFO_ASSESSMENT_PASS="ASSESSMENT_PASS"
+  val ADDINFO_EVENTNAME="EVENTNAME"
+  val EVENT = "event"
+  val NAME = "name"
 
   val ACTIVITY_ID = "activity_id"
   val ID = "id"
@@ -125,7 +140,11 @@ class KarmaPointsProcessorConfig(override val config: Config) extends BaseJobCon
   val HEADER_CONTENT_TYPE_JSON = "application/json"
   val X_AUTHENTICATED_USER_ORGID = "x-authenticated-user-orgid"
   val X_AUTHENTICATED_USER_ID = "x-authenticated-userid"
-
+  val EVENT_ID = "event_id"
+  val BATCH_ID = "batch_id"
+  val ETS = "ets"
+  val END_DATE="endDate"
+  val END_TIME="endTime"
   val CLAIMED_NON_ACBP_COURSE_KARMA_QUOTA =  "claimedNonACBPCourseKarmaQuota"
   val FORMATTED_MONTH = "formattedMonth"
   val TOTAL_POINTS="total_points"
