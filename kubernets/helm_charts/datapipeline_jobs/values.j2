@@ -700,10 +700,10 @@ event-cert-generator:
   event-cert-generator: |+
     include file("/data/flink/conf/base-config.conf")
     kafka {
-      input.topic = {{ env_name }}.generate.certificate.request
+      input.topic = {{ env_name }}.event.generate.certificate.request
       output.audit.topic = {{ env_name }}.telemetry.raw
-      groupId = {{ env_name }}-certificate-generator-group
-      program.cert.output.topic= {{ env_name }}.issue.program.certificate.request
+      groupId = {{ env_name }}-event-certificate-generator-group
+      program.cert.output.topic= {{ env_name }}.event.generate.certificate.failed
     }
     task {
       restart-strategy.attempts = {{ restart_attempts }} # max 3 restart attempts
@@ -714,7 +714,7 @@ event-cert-generator:
     }
     lms-cassandra {
       keyspace = "{{ middleware_course_keyspace }}"
-      user_enrolments.table = "{{ middleware_user_enrolments_table }}"
+      user_enrolments.table = user_event_enrolments
       course_batch.table = "{{ middleware_course_batch_table }}"
       sbkeyspace = "{{ registry_sunbird_keyspace }}"
       certreg.table ="{{ cert_registry_table }}"
