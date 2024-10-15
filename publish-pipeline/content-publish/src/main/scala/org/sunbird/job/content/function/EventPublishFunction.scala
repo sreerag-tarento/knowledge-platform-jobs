@@ -106,6 +106,6 @@ extends BaseProcessFunction[Event, String](config) with EventPublisher with Fail
     private def pushFailedEvent(event: Event, errorMessage: String, error: Throwable, context: ProcessFunction[Event, String]#Context)(implicit metrics: Metrics): Unit = {
         val failedEvent = if (error == null) getFailedEvent(event.jobName, event.getMap(), errorMessage) else getFailedEvent(event.jobName, event.getMap(), error)
         context.output(config.failedEventOutTag, failedEvent)
-        metrics.incCounter(config.contentPublishFailedEventCount)
+        metrics.incCounter(config.eventTypePublishFailedCount)
     }
 }

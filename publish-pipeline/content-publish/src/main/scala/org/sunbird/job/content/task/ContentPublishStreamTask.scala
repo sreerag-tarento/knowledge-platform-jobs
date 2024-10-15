@@ -6,7 +6,7 @@ import org.apache.flink.api.java.typeutils.TypeExtractor
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
 import org.sunbird.job.connector.FlinkKafkaConnector
-import org.sunbird.job.content.function.{CollectionPublishFunction, ContentPublishFunction, PublishEventRouter}
+import org.sunbird.job.content.function.{CollectionPublishFunction, ContentPublishFunction, PublishEventRouter, EventPublishFunction}
 import org.sunbird.job.content.publish.domain.Event
 import org.sunbird.job.util.{FlinkUtil, HttpUtil}
 
@@ -40,6 +40,11 @@ class ContentPublishStreamTask(config: ContentPublishConfig, kafkaConnector: Fli
     		  .name("collection-publish-process").uid("collection-publish-process").setParallelism(1)
     collectionPublish.getSideOutput(config.generatePostPublishProcessTag).addSink(kafkaConnector.kafkaStringSink(config.postPublishTopic))
 
+   val eventPublish = processStreamTask.getSideOutput(config.eventPublishOutTag).process(new EventPublishFunction(config, httpUtil))
+      .name("event-publish-process").uid("event-publish-process").setParallelism(1)
+     eventPublish.getSideOutput(config.generatePostPublishProcessTag).addSink(kafkaConnector.kafkaStringSink(config.postPublishTopic))
+     eventPublish.getSideOutput(config.failedEventOutTag).addSink(kafkaConnector.kafkaStringSink(config.kafkaErrorTopic))
+    
     env.execute(config.jobName)
   }
 }
