@@ -15,8 +15,8 @@ class KarmaPointsProcessorTask(config: KarmaPointsProcessorConfig, kafkaConnecto
   private[this] val logger = LoggerFactory.getLogger(classOf[KarmaPointsProcessorTask])
 
   def process(): Unit = {
-    //implicit val env: StreamExecutionEnvironment = FlinkUtil.getExecutionContext(config)
-    implicit val env: StreamExecutionEnvironment = StreamExecutionEnvironment.createLocalEnvironment()
+    implicit val env: StreamExecutionEnvironment = FlinkUtil.getExecutionContext(config)
+    //implicit val env: StreamExecutionEnvironment = StreamExecutionEnvironment.createLocalEnvironment()
     implicit val eventTypeInfo: TypeInformation[Event] = TypeExtractor.getForClass(classOf[Event])
     implicit val stringTypeInfo: TypeInformation[String] = TypeExtractor.getForClass(classOf[String])
 
