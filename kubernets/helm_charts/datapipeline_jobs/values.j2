@@ -645,7 +645,7 @@ program-cert-pre-processor:
     parallelism.default: 1
     jobmanager.execution.failover-strategy: region
     taskmanager.memory.network.fraction: 0.1
-    
+
 collection-certificate-generator:
   collection-certificate-generator: |+
     include file("/data/flink/conf/base-config.conf")
@@ -762,7 +762,7 @@ karma-points-persist-processor:
       consumer.parallelism = {{ karma_points_persist_processor_consumer_parallelism }}
       generate_certificate.parallelism = {{ karma_points_persist_processor_generate_certificate_parallelism }}
     }
-    
+
       karmapoints {
       acbpQuotaKarmaPoints = 10
       courseCompletionQuotaKarmaPoints = 5
@@ -887,7 +887,7 @@ content-publish:
     cloud_storage_secret="{{ cloud_storage_secret | replace('\n', '\\n') }}"
     cloud_storage_container="{{ cloud_storage_content_bucketname }}"
     cloud_storage_endpoint="{{ cloud_storage_endpoint }}"
-    
+
     hierarchy {
       keyspace = "{{ hierarchy_keyspace_name }}"
       table = "content_hierarchy"
@@ -935,10 +935,10 @@ content-publish:
     compositesearch.index.name = "compositesearch"
     search.document.type = "cs"
     content.ecar.file.generation.enabled = false
-    
+
     Course="Program"
     Course="Mandatory Course Goal"
-    
+
 
     master.category.validation.enabled ="{{ master_category_validation_enabled }}"
     service {
