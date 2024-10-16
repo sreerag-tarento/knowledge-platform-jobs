@@ -716,7 +716,7 @@ event-cert-generator:
     }
     lms-cassandra {
       keyspace = "{{ middleware_course_keyspace }}"
-      user_enrolments.table = "user_event_enrolments"
+      user_enrolments.table = "user_entity_enrolments"
       course_batch.table = "{{ middleware_course_batch_table }}"
       sbkeyspace = "{{ registry_sunbird_keyspace }}"
       certreg.table ="{{ cert_registry_table }}"
