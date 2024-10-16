@@ -248,6 +248,7 @@ trait BatchCreation {
         put("endTime", eData.get("endTime"))
         put("resourceType", eData.get("resourceType"))
         put("duration", eData.get("duration"))
+        put("minPercetageToComplete", config.minPercetageToCompleteEventResource)
       }
     }
 
