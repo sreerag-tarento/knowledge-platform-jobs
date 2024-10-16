@@ -67,6 +67,8 @@ class CollectionCertPreProcessorFn(config: CollectionCertPreProcessorConfig, htt
                     logger.info(s"No certTemplates available for batchId :${event.batchId}")
                     metrics.incCounter(config.skippedEventCount)
                 }
+            } else if (event.isValidEventType()(config)) {
+                // Call necessary methods from new helper class
             } else {
                 logger.info(s"Invalid request : ${event}")
                 metrics.incCounter(config.skippedEventCount)

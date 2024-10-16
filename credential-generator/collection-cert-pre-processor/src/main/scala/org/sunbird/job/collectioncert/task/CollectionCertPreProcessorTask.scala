@@ -30,6 +30,9 @@ class CollectionCertPreProcessorTask(config: CollectionCertPreProcessorConfig, k
 
         progressStream.getSideOutput(config.generateCertificateOutputTag).addSink(kafkaConnector.kafkaStringSink(config.kafkaOutputTopic))
           .name(config.generateCertificateProducer).uid(config.generateCertificateProducer).setParallelism(config.generateCertificateParallelism)
+        
+        progressStream.getSideOutput(config.generateEventCertificateOutputTag).addSink(kafkaConnector.kafkaStringSink(config.kafkaEventOutputTopic))
+          .name(config.generateEventCertificateProducer).uid(config.generateEventCertificateProducer).setParallelism(config.generateEventCertificateParallelism)
         env.execute(config.jobName)
     }
 
@@ -54,5 +57,5 @@ object CollectionCertPreProcessorTask {
 // $COVERAGE-ON
 
 class CollectionCertPreProcessorKeySelector extends KeySelector[Event, String] {
-    override def getKey(event: Event): String = Set(event.userId, event.courseId, event.batchId).mkString("_")
+    override def getKey(event: Event): String = Set(event.userId, if (event.courseId == "") event.eventId else event.courseId, event.batchId).mkString("_")
 }
