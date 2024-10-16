@@ -8,7 +8,7 @@ import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
 import org.slf4j.LoggerFactory
 import org.sunbird.job.connector.FlinkKafkaConnector
 import org.sunbird.job.karmapoints.domain.Event
-import org.sunbird.job.karmapoints.functions.{ClaimACBPProcessorFn, CourseCompletionProcessorFn, FirstEnrolmentProcessorFn, FirstLoginProcessorFn, RatingProcessorFn}
+import org.sunbird.job.karmapoints.functions.{ClaimACBPProcessorFn, CourseCompletionProcessorFn, FirstEnrolmentProcessorFn, FirstLoginProcessorFn, RatingProcessorFn,EventAttendedProcessorFn}
 import org.sunbird.job.util.{FlinkUtil, HttpUtil}
 
 class KarmaPointsProcessorTask(config: KarmaPointsProcessorConfig, kafkaConnector: FlinkKafkaConnector, httpUtil: HttpUtil) {
@@ -16,7 +16,7 @@ class KarmaPointsProcessorTask(config: KarmaPointsProcessorConfig, kafkaConnecto
 
   def process(): Unit = {
     implicit val env: StreamExecutionEnvironment = FlinkUtil.getExecutionContext(config)
-   // implicit val env: StreamExecutionEnvironment = StreamExecutionEnvironment.createLocalEnvironment()
+    //implicit val env: StreamExecutionEnvironment = StreamExecutionEnvironment.createLocalEnvironment()
     implicit val eventTypeInfo: TypeInformation[Event] = TypeExtractor.getForClass(classOf[Event])
     implicit val stringTypeInfo: TypeInformation[String] = TypeExtractor.getForClass(classOf[String])
 
@@ -58,6 +58,14 @@ class KarmaPointsProcessorTask(config: KarmaPointsProcessorConfig, kafkaConnecto
       .setParallelism(config.kafkaConsumerParallelism)
       .rebalance
       .process(new ClaimACBPProcessorFn(config, httpUtil))
+      .setParallelism(config.parallelism)
+
+    env.addSource(kafkaConnector.kafkaJobRequestSource[Event](config.kafkaInputEventAttendedTopic))
+      .name(config.karmaPointsEventAttendedPersistProcessorConsumer)
+      .uid(config.karmaPointsEventAttendedPersistProcessorConsumer)
+      .setParallelism(config.kafkaConsumerParallelism)
+      .rebalance
+      .process(new EventAttendedProcessorFn(config, httpUtil))
       .setParallelism(config.parallelism)
 
      env.execute(config.jobName)
