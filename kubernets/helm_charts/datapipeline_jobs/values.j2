@@ -834,7 +834,7 @@ content-publish:
       keyspace = "{{ content_keyspace_name }}"
       table = "content_data"
       tmp_file_location = "/tmp"
-      objectType = ["Content", "ContentImage","Collection","CollectionImage"]
+      objectType = ["Content", "ContentImage","Collection","CollectionImage","Event"]
       mimeType = ["application/pdf", "video/avi", "video/mpeg", "video/quicktime", "video/3gpp", "video/mpeg", "video/mp4", "video/ogg", "video/webm", "application/vnd.ekstep.html-archive","application/vnd.ekstep.ecml-archive","application/vnd.ekstep.content-collection"
                                               "application/vnd.ekstep.ecml-archive",
                                                 "application/vnd.ekstep.html-archive",
@@ -866,7 +866,8 @@ content-publish:
                                                  "application/vnd.ekstep.h5p-archive",
                                                  "application/vnd.ekstep.plugin-archive",
                                                  "video/x-youtube", "video/youtube",
-                                                 "text/x-url","application/offline"]
+                                                 "text/x-url","application/offline",
+                                                 "application/html"]
       asset_download_duration = "60 seconds"
       stream {
         enabled = {{ content_stream_enabled | lower }}
