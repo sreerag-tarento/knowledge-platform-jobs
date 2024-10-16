@@ -292,6 +292,8 @@ post-publish-processor:
       certTemplateId = defaultCertTemplate
       systemSettingsTable = system_settings
       hierarchyStoreKeySpace = "{{ env}}_hierarchy_store"
+      eventBatchTable = "event_batch"
+      eventCertTemplateId = defaultCertTemplate
     }
     dialcode-cassandra {
       keyspace = "dialcodes"
