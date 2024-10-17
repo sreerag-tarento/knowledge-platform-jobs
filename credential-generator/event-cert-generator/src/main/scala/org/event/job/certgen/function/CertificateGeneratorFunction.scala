@@ -286,7 +286,7 @@ class CertificateGeneratorFunction  (config: EventCertificateGeneratorConfig, ht
 
   def updateUserEnrollmentTable(event: Event, certMetaData: UserEnrollmentData, context: KeyedProcessFunction[String, Event, String]#Context)(implicit metrics: Metrics): Unit = {
     logger.info("updating user event enrollment table {}", certMetaData)
-    val primaryFields = Map(config.userId.toLowerCase() -> certMetaData.userId, config.batchId.toLowerCase -> certMetaData.batchId, config.EVENT_ID.toLowerCase -> certMetaData.eventId)
+    val primaryFields = Map(config.dbUserId -> certMetaData.userId, config.dbContentId -> certMetaData.eventId, config.dbContextId -> certMetaData.eventId,  config.dbBatchId -> certMetaData.batchId)
     val records = getIssuedCertificatesFromUserEnrollmentTable(primaryFields)
     if (records.nonEmpty) {
       records.foreach((row: Row) => {
@@ -344,9 +344,10 @@ class CertificateGeneratorFunction  (config: EventCertificateGeneratorConfig, ht
   def getUpdateIssuedCertQuery(updatedCerts: util.List[util.Map[String, String]], userId: String, eventId: String, batchId: String, config: EventCertificateGeneratorConfig):
   Update.Where = QueryBuilder.update(config.dbKeyspace, config.dbEnrollmentTable).where()
     .`with`(QueryBuilder.set(config.issued_certificates, updatedCerts))
-    .where(QueryBuilder.eq(config.userId.toLowerCase, userId))
-    .and(QueryBuilder.eq(config.EVENT_ID.toLowerCase, eventId))
-    .and(QueryBuilder.eq(config.batchId.toLowerCase, batchId))
+    .where(QueryBuilder.eq(config.dbUserId, userId))
+    .and(QueryBuilder.eq(config.dbContentId, eventId))
+    .and(QueryBuilder.eq(config.dbContextId, eventId))
+    .and(QueryBuilder.eq(config.dbBatchId, batchId))
 
 
   private def getIssuedCertificatesFromUserEnrollmentTable(columns: Map[String, AnyRef])(implicit metrics: Metrics) = {
