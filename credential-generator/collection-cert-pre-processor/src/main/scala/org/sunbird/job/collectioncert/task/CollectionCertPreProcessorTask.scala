@@ -15,6 +15,7 @@ import org.sunbird.job.util.{FlinkUtil, HttpUtil}
 class CollectionCertPreProcessorTask(config: CollectionCertPreProcessorConfig, kafkaConnector: FlinkKafkaConnector, httpUtil: HttpUtil) {
     def process(): Unit = {
         implicit val env: StreamExecutionEnvironment = FlinkUtil.getExecutionContext(config)
+//implicit val env: StreamExecutionEnvironment = StreamExecutionEnvironment.createLocalEnvironment()
         implicit val eventTypeInfo: TypeInformation[Event] = TypeExtractor.getForClass(classOf[Event])
         implicit val stringTypeInfo: TypeInformation[String] = TypeExtractor.getForClass(classOf[String])
         val source = kafkaConnector.kafkaJobRequestSource[Event](config.kafkaInputTopic)
@@ -30,6 +31,9 @@ class CollectionCertPreProcessorTask(config: CollectionCertPreProcessorConfig, k
 
         progressStream.getSideOutput(config.generateCertificateOutputTag).addSink(kafkaConnector.kafkaStringSink(config.kafkaOutputTopic))
           .name(config.generateCertificateProducer).uid(config.generateCertificateProducer).setParallelism(config.generateCertificateParallelism)
+        
+        progressStream.getSideOutput(config.generateEventCertificateOutputTag).addSink(kafkaConnector.kafkaStringSink(config.kafkaEventOutputTopic))
+          .name(config.generateEventCertificateProducer).uid(config.generateEventCertificateProducer).setParallelism(config.generateEventCertificateParallelism)
         env.execute(config.jobName)
     }
 
@@ -54,5 +58,5 @@ object CollectionCertPreProcessorTask {
 // $COVERAGE-ON
 
 class CollectionCertPreProcessorKeySelector extends KeySelector[Event, String] {
-    override def getKey(event: Event): String = Set(event.userId, event.courseId, event.batchId).mkString("_")
+    override def getKey(event: Event): String = Set(event.userId, if (event.courseId == "") event.eventId else event.courseId, event.batchId).mkString("_")
 }

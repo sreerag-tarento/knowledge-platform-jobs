@@ -26,28 +26,39 @@ class CollectionCertPreProcessorConfig(override val config: Config) extends Base
     val generateCertificateProducer = "generate-certificate-sink"
     override val kafkaConsumerParallelism: Int = config.getInt("task.consumer.parallelism")
     val generateCertificateParallelism:Int = config.getInt("task.generate_certificate.parallelism")
+    val kafkaEventOutputTopic: String = config.getString("kafka.event.output.topic")
+    val generateEventCertificateProducer = "generate-event-certificate-sink"
+    val generateEventCertificateParallelism:Int = config.getInt("task.generate_event_certificate.parallelism")
     
     //Tags
     val generateCertificateOutputTagName = "generate-certificate-request"
     val generateCertificateOutputTag: OutputTag[String] = OutputTag[String](generateCertificateOutputTagName)
+    val generateEventCertificateOutputTagName = "generate-event-certificate-request"
+    val generateEventCertificateOutputTag: OutputTag[String] = OutputTag[String](generateEventCertificateOutputTagName)
 
     //Cassandra config
     val dbHost: String = config.getString("lms-cassandra.host")
     val dbPort: Int = config.getInt("lms-cassandra.port")
     val keyspace: String = config.getString("lms-cassandra.keyspace")
     val courseTable: String = config.getString("lms-cassandra.course_batch.table")
+    val eventTable: String = config.getString("lms-cassandra.event_batch.table")
     val userEnrolmentsTable: String = config.getString("lms-cassandra.user_enrolments.table")
+    val userEventEnrolmentsTable: String = config.getString("lms-cassandra.user_event_enrolments.table")
     val assessmentTable: String = config.getString("lms-cassandra.assessment_aggregator.table")
     val useActivityAggTable: String = config.getString("lms-cassandra.user_activity_agg.table")
     val dbBatchId = "batchid"
     val dbCourseId = "courseid"
     val dbUserId = "userid"
+    val dbEventId = "eventid"
+    val dbContextid = "contextid"
+    val dbContentid = "contentid"
     
     //API URL
     val contentBasePath = config.getString("service.content.basePath")
     val learnerBasePath = config.getString("service.learner.basePath")
     val userReadApi = config.getString("user_read_api")
     val contentReadApi = config.getString("content_read_api")
+    val eventReadApi = config.getString("event_read_api")
 
     // Metric List
     val totalEventsCount = "total-events-count"
@@ -85,5 +96,6 @@ class CollectionCertPreProcessorConfig(override val config: Config) extends Base
     val versionKey: String = "versionKey"
     val posterImage: String = "posterImage"
     val parentCollections: String = "parentCollections"
+    val issueEventCertificate = "issue-event-certificate"
 
 }

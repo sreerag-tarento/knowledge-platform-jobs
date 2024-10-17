@@ -46,13 +46,15 @@ class EventCertificateGeneratorConfig(override val config: Config) extends BaseJ
   val dbKeyspace: String = config.getString("lms-cassandra.keyspace")
   val dbHost: String = config.getString("lms-cassandra.host")
   val dbPort: Int = config.getInt("lms-cassandra.port")
-  val dbCourseBatchTable: String = config.getString("lms-cassandra.course_batch.table")
+  val dbEventBatchTable: String = config.getString("lms-cassandra.event_batch.table")
   val dbBatchId = "batchid"
   val dbCourseId = "courseid"
   val dbUserId = "userid"
   val active: String = "active"
   val issuedCertificates: String = "issued_certificates"
   val dbEventId = "eventid"
+  val dbContentId = "contentid"
+  val dbContextId = "contextid"
 
   // Metric List
   val totalEventsCount = "total-events-count"
@@ -64,7 +66,7 @@ class EventCertificateGeneratorConfig(override val config: Config) extends BaseJ
   val notifiedUserCount = "notified-user-count"
   val skipNotifyUserCount = "skipped-notify-user-count"
   val failedNotifyUserCount = "failed-notify-user-count"
-  val courseBatchdbReadCount = "db-course-batch-read-count"
+  val eventBatchdbReadCount = "db-event-batch-read-count"
 
   // Consumers
   val certificateGeneratorConsumer = "certificate"
@@ -120,6 +122,8 @@ class EventCertificateGeneratorConfig(override val config: Config) extends BaseJ
   val TEMPLATE_ID: String = "templateId"
   val USER_ID: String = "userId"
   val EVENT_ID: String = "eventId"
+  val CONTENT_ID: String = "contentid"
+  val CONTEXT_ID: String = "contextid"
 
 
   val courseId = "courseId"
