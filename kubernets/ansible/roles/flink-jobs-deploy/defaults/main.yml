@@ -84,6 +84,7 @@ post_publish_relation_update_parallelism: 1
 ###  Certificate Job related Vars
 certificate_generator_consumer_parallelism: 1
 certificate_generator_parallelism: 1
+generate_event_certificate_parallelism: 1
 
 
 ### Video stream generator related vars
