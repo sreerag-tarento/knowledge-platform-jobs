@@ -1,4 +1,4 @@
-package org.sunbird.job.useranalysis.task
+package org.sunbird.job.useractivity.task
 
 import java.io.File
 import com.typesafe.config.ConfigFactory
@@ -7,39 +7,31 @@ import org.apache.flink.api.java.functions.KeySelector
 import org.apache.flink.api.java.typeutils.TypeExtractor
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
-import org.sunbird.job.useranalysis.domain.Event
-import org.sunbird.job.useranalysis.functions.UserActivityAnalysisUpdaterFn
-import org.sunbird.job.useranalysis.task.UserActivityAnalysisUpdaterConfig
-
-
+import org.slf4j.LoggerFactory
 import org.sunbird.job.connector.FlinkKafkaConnector
+import org.sunbird.job.useractivity.domain.Event
+import org.sunbird.job.useractivity.functions.UserActivityAnalysisUpdaterFn
 import org.sunbird.job.util.{FlinkUtil, HttpUtil}
 
 class UserActivityAnalysisUpdaterTask(config: UserActivityAnalysisUpdaterConfig, kafkaConnector: FlinkKafkaConnector, httpUtil: HttpUtil) {
+    private[this] val logger = LoggerFactory.getLogger(classOf[UserActivityAnalysisUpdaterTask])
+
     def process(): Unit = {
-//        implicit val env: StreamExecutionEnvironment = FlinkUtil.getExecutionContext(config)
-        implicit val env: StreamExecutionEnvironment = StreamExecutionEnvironment.createLocalEnvironment()
+        implicit val env: StreamExecutionEnvironment = FlinkUtil.getExecutionContext(config)
         implicit val eventTypeInfo: TypeInformation[Event] = TypeExtractor.getForClass(classOf[Event])
         implicit val stringTypeInfo: TypeInformation[String] = TypeExtractor.getForClass(classOf[String])
         val source = kafkaConnector.kafkaJobRequestSource[Event](config.kafkaInputTopic)
-
+        logger.info("This is under process for task")
         val progressStream =
             env.addSource(source).name(config.certificatePreProcessorConsumer)
               .uid(config.certificatePreProcessorConsumer).setParallelism(config.kafkaConsumerParallelism)
               .rebalance
-              .keyBy(new CollectionCertPreProcessorKeySelector())
+              .keyBy(new UserActivityAnalysisUpdaterKeySelector())
               .process(new UserActivityAnalysisUpdaterFn(config, httpUtil))
-              .name("collection-cert-pre-processor").uid("collection-cert-pre-processor")
+              .name("user-activity-analysis-updater").uid("user-activity-analysis-updater")
               .setParallelism(config.parallelism)
-
-        progressStream.getSideOutput(config.generateCertificateOutputTag).addSink(kafkaConnector.kafkaStringSink(config.kafkaOutputTopic))
-          .name(config.generateCertificateProducer).uid(config.generateCertificateProducer).setParallelism(config.generateCertificateParallelism)
-        
-        progressStream.getSideOutput(config.generateEventCertificateOutputTag).addSink(kafkaConnector.kafkaStringSink(config.kafkaEventOutputTopic))
-          .name(config.generateEventCertificateProducer).uid(config.generateEventCertificateProducer).setParallelism(config.generateEventCertificateParallelism)
         env.execute(config.jobName)
     }
-
 }
 
 // $COVERAGE-OFF$ Disabling scoverage as the below code can only be invoked within flink cluster
@@ -53,13 +45,11 @@ object UserActivityAnalysisUpdaterTask {
         val userActivityAnalysisUpdaterConfig = new UserActivityAnalysisUpdaterConfig(config)
         val kafkaUtil = new FlinkKafkaConnector(userActivityAnalysisUpdaterConfig)
         val httpUtil = new HttpUtil()
-        val task = new UserActivityAnalysisUpdaterTask()(userActivityAnalysisUpdaterConfig, kafkaUtil, httpUtil)
+        val task = new UserActivityAnalysisUpdaterTask(userActivityAnalysisUpdaterConfig, kafkaUtil, httpUtil)
         task.process()
     }
 }
 
-// $COVERAGE-ON
-
-class CollectionCertPreProcessorKeySelector extends KeySelector[Event, String] {
-    override def getKey(event: Event): String = Set(event.userId, if (event.courseId == "") event.eventId else event.courseId, event.batchId).mkString("_")
+class UserActivityAnalysisUpdaterKeySelector extends KeySelector[Event, String] {
+    override def getKey(event: Event): String = Set(event.userId, event.courseId, event.batchId).mkString("_")
 }

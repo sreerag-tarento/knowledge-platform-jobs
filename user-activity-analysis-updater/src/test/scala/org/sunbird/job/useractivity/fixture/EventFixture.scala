@@ -1,4 +1,4 @@
-package org.sunbird.job.useranalysis.fixture
+package org.sunbird.job.useractivity.fixture
 
 object EventFixture {
     
