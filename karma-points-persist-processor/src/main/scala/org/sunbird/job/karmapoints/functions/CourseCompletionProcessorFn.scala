@@ -43,6 +43,10 @@ class CourseCompletionProcessorFn(config: KarmaPointsProcessorConfig, httpUtil: 
     val eventData = event.getMap().get(config.EDATA).asInstanceOf[scala.collection.immutable.Map[String, Any]]
     val userId = eventData.get(config.USERIDS).asInstanceOf[Option[List[Any]]].get(0).asInstanceOf[String]
     val contextId: String = eventData.get(config.COURSE_ID) match { case Some(value) => value.asInstanceOf[String] case _ => "" }
+    val action: String = eventData.get("action") match {case Some(value) => value.asInstanceOf[String] case _ => ""}
+    if("issue-event-certificate".equalsIgnoreCase(action)){
+      return
+    }
     val hierarchy: java.util.Map[String, AnyRef] = fetchContentHierarchy(contextId) ( metrics,config, cassandraUtil)
     if (Option(hierarchy).isEmpty || hierarchy.isEmpty) {
       return
