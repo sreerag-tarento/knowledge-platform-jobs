@@ -786,6 +786,15 @@ user-activity-analysis-updater:
       password = "{{postgresql_password_sunbird}}"
     }
 
+    cert_domain_url = "{{ cert_domain_url }}"
+    user_read_api = "/private/user/v1/read"
+    content_read_api = "/content/v3/read"
+    event_read_api = "/event/v4/read"
+    service {
+      content.basePath = "{{ content_service_base_url }}"
+      learner.basePath = "{{ learner_service_base_url }}"
+    }
+    
     redis-meta {
     {% if metadata2_redis_host is defined %}
       host = {{ metadata2_redis_host }}
