@@ -761,6 +761,8 @@ user-activity-analysis-updater:
     include file("/data/flink/conf/base-config.conf")
     kafka {
       input.topic = {{ env_name }}.dashboard.user.state
+      output.topic = {{ env_name }}.generate.certificate.request
+      output.failed.topic = {{ env_name }}.issue.certificate.failed
       groupId = {{ env_name }}-dashboard-user-state-activity-group
     }
     task {
@@ -792,7 +794,7 @@ user-activity-analysis-updater:
     {% endif %}
       port = 6379
     }
-    
+
     assessment.metrics.supported.contenttype = ["SelfAssess"]
 
   flink-conf: |+
