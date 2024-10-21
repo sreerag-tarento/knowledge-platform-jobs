@@ -784,6 +784,17 @@ user-activity-analysis-updater:
       password = "{{postgresql_password_sunbird}}"
     }
 
+    redis-meta {
+    {% if metadata2_redis_host is defined %}
+      host = {{ metadata2_redis_host }}
+    {% else %}
+      host = {{ redis_host }}
+    {% endif %}
+      port = 6379
+    }
+    
+    assessment.metrics.supported.contenttype = ["SelfAssess"]
+
   flink-conf: |+
     jobmanager.memory.flink.size: {{ flink_job_names['user-activity-analysis-updater'].jobmanager_memory }}
     taskmanager.memory.flink.size: {{ flink_job_names['user-activity-analysis-updater'].taskmanager_memory }}
