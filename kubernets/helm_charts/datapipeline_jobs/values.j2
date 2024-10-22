@@ -765,8 +765,6 @@ user-activity-analysis-updater:
     include file("/data/flink/conf/base-config.conf")
     kafka {
       input.topic = {{ env_name }}.dashboard.user.state
-      output.topic = {{ env_name }}.generate.certificate.request
-      output.failed.topic = {{ env_name }}.issue.certificate.failed
       groupId = {{ env_name }}-dashboard-user-state-activity-group
     }
     task {
@@ -780,6 +778,9 @@ user-activity-analysis-updater:
     lms-cassandra {
       keyspace = "sunbird"
       user.table = "user"
+      course_batch.table = "course_batch"
+      assessment_aggregator.table = "assessment_aggregator"
+      user_activity_agg.table = "user_activity_agg"
     }
 
     postgres {
@@ -793,7 +794,6 @@ user-activity-analysis-updater:
     cert_domain_url = "{{ cert_domain_url }}"
     user_read_api = "/private/user/v1/read"
     content_read_api = "/content/v3/read"
-    event_read_api = "/event/v4/read"
     service {
       content.basePath = "{{ content_service_base_url }}"
       learner.basePath = "{{ learner_service_base_url }}"
@@ -809,6 +809,7 @@ user-activity-analysis-updater:
     }
 
     assessment.metrics.supported.contenttype = ["SelfAssess"]
+    enable.suppress.exception = true
 
   flink-conf: |+
     jobmanager.memory.flink.size: {{ flink_job_names['user-activity-analysis-updater'].jobmanager_memory }}
