@@ -712,6 +712,8 @@ event-cert-generator:
       output.audit.topic = {{ env_name }}.telemetry.raw
       groupId = {{ env_name }}-event-certificate-generator-group
       program.cert.output.topic= {{ env_name }}.event.generate.certificate.failed
+      kafka.output.karma.point.topic = "{{env_name}}.user.claim.event.karma.points"
+      kafka.output.dashboard.topic = "{{env_name}}.dashboard.user.state"
     }
     task {
       restart-strategy.attempts = {{ restart_attempts }} # max 3 restart attempts
@@ -719,6 +721,8 @@ event-cert-generator:
       consumer.parallelism = {{ event_cert_generator_consumer_parallelism }}
       parallelism = {{ event_cert_generator_parallelism }}
       notifier.parallelism = {{ event_cert_generator_notifier_parallelism }}
+      dashboard.parallelism = {{ event_cert_generator_dashboard_parallelism }}
+      karmapoints.parallelism = {{ event_cert_generator_karmapoints_parallelism }}
     }
     lms-cassandra {
       keyspace = "{{ middleware_course_keyspace }}"
@@ -794,7 +798,7 @@ user-activity-analysis-updater:
       content.basePath = "{{ content_service_base_url }}"
       learner.basePath = "{{ learner_service_base_url }}"
     }
-    
+
     redis-meta {
     {% if metadata2_redis_host is defined %}
       host = {{ metadata2_redis_host }}
