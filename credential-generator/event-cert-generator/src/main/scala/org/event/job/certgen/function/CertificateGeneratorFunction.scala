@@ -76,9 +76,10 @@ class CertificateGeneratorFunction  (config: EventCertificateGeneratorConfig, ht
           if (config.enableRcCertificate) generateCertificateUsingRC(event, context)(metrics)
           else generateCertificate(event, context)(metrics)
         }
-        if (event.eventType.equalsIgnoreCase("offline")) {
-          emitKarmaPoints(event, context)
-        }
+        // We can't generate karma points event as it is depends on ets value... which should be event cert completed on.
+        //if (event.eventType.equalsIgnoreCase("offline")) {
+        //  emitKarmaPoints(event, context)
+        //}
         emitDashboardEvent(event, context)
       } else {
         metrics.incCounter(config.skippedEventCount)
