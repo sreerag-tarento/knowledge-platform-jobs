@@ -63,6 +63,7 @@ class NotifierFunction(config: EventCertificateGeneratorConfig, httpUtil: HttpUt
           logger.info("Sending notification email. URL: {}", url)
           val notifyTemplate = getNotifyTemplateFromRes(certTemplate.get(metaData.templateId))
           val ratingUrl = config.domainUrl + config.ratingMidPoint + metaData.eventId + config.ratingEndPoint + metaData.batchId
+          val tocUrl = config.domainUrl + config.eventMidPoint + metaData.eventId
           val request = mutable.Map[String, AnyRef]("request" -> (notifyTemplate ++ mutable.Map[String, AnyRef](
             config.firstName -> userResponse.getOrElse(config.firstName, "").asInstanceOf[String],
             config.trainingName -> metaData.courseName,
@@ -74,7 +75,8 @@ class NotifierFunction(config: EventCertificateGeneratorConfig, httpUtil: HttpUt
             config.courseProvider -> metaData.courseProvider,
             config.coursePosterImage -> metaData.coursePosterImage,
             config.profileUpdateLink -> (config.webPortalUrl + config.profileUpdateUrl),
-            config.publicPdfUrl -> metaData.publicPdfUrl.getOrElse("")
+            config.publicPdfUrl -> metaData.publicPdfUrl.getOrElse(""),
+            config.link -> tocUrl
           )))
 
           val response = httpUtil.post(url, ScalaJsonUtil.serialize(request))
