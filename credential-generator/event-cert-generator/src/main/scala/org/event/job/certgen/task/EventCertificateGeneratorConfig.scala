@@ -193,5 +193,7 @@ class EventCertificateGeneratorConfig(override val config: Config) extends BaseJ
   val pdfGeneratorServiceHost: String = config.getString("service.pdfGenerator.basePath")
   val pdfGeneratorSvgToPdfUrl: String = config.getString("service.pdfGenerator.svgToPdfPath")
   val publicPdfUrl: String = "publicPdfUrl"
+  val eventMidPoint: String = "/app/event-hub/home/"
+  val link: String = "link"
 
 }
