@@ -713,7 +713,7 @@ event-cert-generator:
       groupId = {{ env_name }}-event-certificate-generator-group
       program.cert.output.topic= {{ env_name }}.event.generate.certificate.failed
       output.karma.point.topic = "{{env_name}}.user.claim.event.karma.points"
-      output.dashboard.topic = "{{env_name}}.dashboard.user.state"
+      output.dashboard.topic = "{{env_name}}.dashboard.user.state.v2"
     }
     task {
       restart-strategy.attempts = {{ restart_attempts }} # max 3 restart attempts
