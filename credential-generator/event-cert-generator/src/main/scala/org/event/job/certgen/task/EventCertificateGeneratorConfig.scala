@@ -190,5 +190,6 @@ class EventCertificateGeneratorConfig(override val config: Config) extends BaseJ
   val webPortalUrl: String = config.getString("web.portal.url")
 
   val enableUserNotification: Boolean = if (config.hasPath("enable.user.email.notification")) config.getBoolean("enable.user.email.notification") else true
-
+  val eventMidPoint: String = "/app/event-hub/home/"
+  val link: String = "link"
 }
