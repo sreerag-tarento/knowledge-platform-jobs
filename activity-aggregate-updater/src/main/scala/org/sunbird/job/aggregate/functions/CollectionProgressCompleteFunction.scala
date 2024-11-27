@@ -13,11 +13,11 @@ import org.sunbird.job.dedup.DeDupEngine
 import org.sunbird.job.{BaseProcessFunction, Metrics}
 import org.sunbird.job.aggregate.domain.{ActorObject, CollectionProgress, EventContext, EventData, EventObject, TelemetryEvent}
 import org.sunbird.job.aggregate.task.ActivityAggregateUpdaterConfig
-import org.sunbird.job.util.{CassandraUtil, HttpUtil}
+import org.sunbird.job.util.CassandraUtil
 
 import scala.collection.JavaConverters._
 
-class CollectionProgressCompleteFunction(config: ActivityAggregateUpdaterConfig, httpUtil: HttpUtil)(implicit val enrolmentCompleteTypeInfo: TypeInformation[List[CollectionProgress]], val stringTypeInfo: TypeInformation[String], @transient var cassandraUtil: CassandraUtil = null)
+class CollectionProgressCompleteFunction(config: ActivityAggregateUpdaterConfig)(implicit val enrolmentCompleteTypeInfo: TypeInformation[List[CollectionProgress]], val stringTypeInfo: TypeInformation[String], @transient var cassandraUtil: CassandraUtil = null)
   extends BaseProcessFunction[List[CollectionProgress], String](config) {
 
   private[this] val logger = LoggerFactory.getLogger(classOf[CollectionProgressCompleteFunction])
