@@ -1,7 +1,6 @@
 package org.sunbird.job.aggregate.functions
 
 import java.util.UUID
-
 import com.datastax.driver.core.querybuilder.{QueryBuilder, Select, Update}
 import com.google.gson.Gson
 import org.apache.flink.api.common.typeinfo.TypeInformation
@@ -51,7 +50,12 @@ class CollectionProgressCompleteFunction(config: ActivityAggregateUpdaterConfig)
     logger.info("enrolmentQueries => "+enrolmentQueries)
     updateDB(config.thresholdBatchWriteSize, enrolmentQueries)(metrics)
     pendingEnrolments.foreach(e => {
-      createIssueCertEvent(e, context)(metrics)
+      val courseId = e.courseId
+      if (config.caseStudy.replaceAll("\\s+", " ").equalsIgnoreCase(e.courseCategory.replaceAll("\\s+", " "))) {
+        logger.info(s"Certificate event not generated for courseId: $courseId because the courseCategory is 'Case Study'.")
+      } else {
+        createIssueCertEvent(e, context)(metrics)
+      }
       generateAuditEvent(e, context)(metrics)
     })
     logger.info("posting events completed")
