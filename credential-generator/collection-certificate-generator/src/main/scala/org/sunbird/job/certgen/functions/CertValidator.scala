@@ -187,8 +187,8 @@ class CertValidator() {
     if (null != row) {
       val issuedCertificates = row
         .getList(config.issuedCertificates, TypeTokens.mapOf(classOf[String], classOf[String])).asScala.toList
-      val isCertIssued = !issuedCertificates.isEmpty && !issuedCertificates
-        .filter(cert => event.name.equalsIgnoreCase(cert.getOrDefault(config.name, "").asInstanceOf[String])).isEmpty
+      val isCertIssued = !issuedCertificates.isEmpty && (issuedCertificates.size > 0)
+       // .filter(cert => event.name.equalsIgnoreCase(cert.getOrDefault(config.name, "").asInstanceOf[String])).isEmpty
       ((null != event.oldId && !event.oldId.isEmpty) || !isCertIssued)
     } else false
   }
