@@ -158,7 +158,7 @@ activity-aggregate-updater:
     activity {
       module.aggs.enabled = true
       input.dedup.enabled = true
-      filter.processed.enrolments = false
+      filter.processed.enrolments = true
       collection.status.cache.expiry = {{ activity_agg_collection_status_cache_expiry_time }}
     }
     service {
@@ -219,7 +219,7 @@ program-activity-aggregate-updater:
     activity {
       module.aggs.enabled = true
       input.dedup.enabled = true
-      filter.processed.enrolments = false
+      filter.processed.enrolments = true
       collection.status.cache.expiry = {{ activity_agg_collection_status_cache_expiry_time }}
     }
     service {
@@ -424,6 +424,7 @@ enrolment-reconciliation:
     activity {
       module.aggs.enabled = true
       collection.status.cache.expiry = {{ enrolment_reconciliation_collection_status_cache_expiry_time }}
+      filter.processed.enrolments = true
     }
     service {
       search.basePath = "{{ kp_search_service_base_url }}"
