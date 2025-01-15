@@ -21,6 +21,8 @@ import java.util.{Date, UUID}
 import scala.collection.JavaConverters._
 import scala.collection.convert.ImplicitConversions.{`map AsScala`, `seq AsJavaList`}
 import scala.collection.mutable
+import scala.util.parsing.json.JSONObject
+import scala.util.parsing.json.JSON
 
 class ProgramCertPreProcessorFn(config: ProgramCertPreProcessorConfig, httpUtil: HttpUtil)
                                (implicit val stringTypeInfo: TypeInformation[String],
@@ -80,6 +82,7 @@ class ProgramCertPreProcessorFn(config: ProgramCertPreProcessorConfig, httpUtil:
             val leafNodeMap = mutable.Map[String, Int]()
 
             var isProgramCertificateToBeGenerated: Boolean = true;
+            var isFailedEvent: Boolean = false;
             var lastCourseCompleteOn: Date = null
             var programCompletedOn: Date = null
             for (courseId <- programChildrenCourses) {
@@ -89,6 +92,8 @@ class ProgramCertPreProcessorFn(config: ProgramCertPreProcessorConfig, httpUtil:
                 val userId: String = event.userId
                 val courseEnrollmentRow = getEnrollmentRecord(enrolmentRecords, courseId)
                 val isCertificateIssued = courseEnrollmentRow.isDefined && !courseEnrollmentRow.get.getList(config.issuedCertificates, TypeTokens.mapOf(classOf[String], classOf[String])).isEmpty
+                val isCompleted = courseEnrollmentRow.isDefined && courseEnrollmentRow.get.getInt(config.status).equals(2)
+                logger.info("Is Course completed for courseId: " + courseId + " userId:" + userId + " :" + isCompleted)
                 logger.info("Is Certificate Available for courseId: " + courseId + " userId:" + userId + " :" + isCertificateIssued)
                 var courseCompletedOn: Date = null;
                 if (isCertificateIssued) {
@@ -114,9 +119,13 @@ class ProgramCertPreProcessorFn(config: ProgramCertPreProcessorConfig, httpUtil:
                     }
                   }
                 }
+                if (!isCertificateIssued && isProgramCertificateToBeGenerated && isCompleted) { //child course is completed but certificate not issued
+                  isFailedEvent = true;
+                }
                 if (!isCertificateIssued && isProgramCertificateToBeGenerated) { //AtLeast one course doesn't have certificate
                   isProgramCertificateToBeGenerated = false;
                 }
+
               }
             }
             if (!leafNodeMap.isEmpty) {
@@ -150,9 +159,15 @@ class ProgramCertPreProcessorFn(config: ProgramCertPreProcessorConfig, httpUtil:
             }
 
             if (isProgramCertificateToBeGenerated) {
-              //Add kafka event to generate Certificate for Program
-              logger.info("Adding the kafka event for programId: " + courseParentId)
-              createIssueCertEventForProgram(courseParentId, event.userId, batchId, context)(metrics)
+                //Add kafka event to generate Certificate for Program
+                logger.info("Adding the kafka event for programId: " + courseParentId)
+                createIssueCertEventForProgram(courseParentId, event.userId, batchId, context)(metrics)
+            }
+            if (isFailedEvent) {
+              val failedEvent = generateFailedEvent(event.userId, batchId, courseParentId)
+              logger.info(s"Program cert validation failed for event: $failedEvent")
+              context.output(config.generateCertificateFailedOutputTag, failedEvent)
+              metrics.incCounter(config.programCertIssueEventsCount)
             }
           }
         }
@@ -261,7 +276,7 @@ class ProgramCertPreProcessorFn(config: ProgramCertPreProcessorConfig, httpUtil:
   }
 
   def getAllEnrolments(userId: String)(implicit metrics: Metrics): java.util.List[Row] = {
-    val selectWhere: Select.Where = QueryBuilder.select(config.dbUserId, config.dbCourseId, config.dbBatchId, config.contentStatus, config.progress, config.issuedCertificates, "completedon", "active")
+    val selectWhere: Select.Where = QueryBuilder.select(config.dbUserId, config.dbCourseId, config.dbBatchId, config.contentStatus, config.progress, config.issuedCertificates, "completedon", "active", config.status)
       .from(config.keyspace, config.userEnrolmentsTable).where()
     selectWhere.and(QueryBuilder.eq(config.dbUserId, userId))
     metrics.incCounter(config.dbReadCount)
@@ -334,4 +349,10 @@ class ProgramCertPreProcessorFn(config: ProgramCertPreProcessorConfig, httpUtil:
 
   }
 
+  def generateFailedEvent(userId: String, batchId: String, courseParentId: String): String = {
+    val ets = System.currentTimeMillis
+    val mid = s"LP.${ets}.${UUID.randomUUID}"
+    val eventString = s"""{"eid": "BE_JOB_REQUEST", "ets": $ets, "mid": "$mid", "actor": {"id": "Program Certificate Pre Processor Generator", "type": "System"}, "context": {"pdata": {"ver": "1.0", "id": "org.sunbird.platform"}}, "object": {"id": "${batchId}_${courseParentId}", "type": "ProgramCertificatePreProcessorGeneration"}, "edata": {"userId": "$userId", "action": "program-issue-certificate", "iteration": 1, "trigger": "auto-issue", "batchId": "$batchId", "parentCollections": ["$courseParentId"], "courseId": "$courseParentId"}}"""
+    eventString
+  }
 }
