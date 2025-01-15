@@ -164,14 +164,11 @@ class ProgramCertPreProcessorFn(config: ProgramCertPreProcessorConfig, httpUtil:
                 createIssueCertEventForProgram(courseParentId, event.userId, batchId, context)(metrics)
             }
             if (isFailedEvent) {
-              val eventJson: String = event match {
-                case m: Map[_, _] =>
-                  JSONObject(m.asInstanceOf[Map[String, Any]]).toString()
-                case _ =>
-                  event.toString
-              }
-              logger.info(s"Program cert validation failed for event: $eventJson")
-              context.output(config.generateCertificateFailedOutputTag, eventJson)
+              val ets = System.currentTimeMillis
+              val mid = s"""LP.${ets}.${UUID.randomUUID}"""
+              val failedEvent = s"""{"eid": "BE_JOB_REQUEST","ets": ${ets},"mid": "${mid}","actor": {"id": "Program Certificate Pre Processor Generator","type": "System"},"context": {"pdata": {"ver": "1.0","id": "org.sunbird.platform"}},"object": {"id": "${batchId}_${courseParentId}","type": "ProgramCertificatePreProcessorGeneration"},"edata": {"userId": "${event.userId}","action": "program-issue-certificate","iteration": 1, "trigger": "auto-issue","batchId": "${batchId}","parentCollections": ["${courseParentId}"],"courseId": "${courseParentId}"}}"""
+              logger.info(s"Program cert validation failed for event: $failedEvent")
+              context.output(config.generateCertificateFailedOutputTag, failedEvent)
               metrics.incCounter(config.programCertIssueEventsCount)
             }
           }
@@ -349,7 +346,7 @@ class ProgramCertPreProcessorFn(config: ProgramCertPreProcessorConfig, httpUtil:
       courseInfoMap.put("courseId", courseId)
       courseInfoMap.put(config.primaryCategory, primaryCategory)
       courseInfoMap.put(config.leafNodes, leafNodes)
-      courseInfoMap
+      courseInfoM4.8.20-EventSkipImplap
     }
 
   }
