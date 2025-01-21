@@ -313,6 +313,16 @@ class CertificateGeneratorFunction  (config: CertificateGeneratorConfig, httpUti
             logger.info("RC Certificate is not enabled. Skipping templateUrl and type fields.")
             Map[String, String]()
           }
+        } ++ {
+          if (StringUtils.isNotBlank(config.specialEventCertificateName)) {
+            logger.info("The special Certificate event name is : {}", config.specialEventCertificateName)
+            Map[String, String](
+              config.eventIssueName -> config.specialEventCertificateName,
+            )
+          } else {
+            logger.info("No Special Certificate")
+            Map[String, String]()
+          }
         }))
 
         val query = getUpdateIssuedCertQuery(updatedCerts, certMetaData.userId, certMetaData.courseId, certMetaData.batchId, config)
