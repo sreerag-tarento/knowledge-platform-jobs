@@ -113,6 +113,7 @@ base_config: |
         itemset = "2.0"
       }
     }
+    specialEventCertificateName = "{{ special_event_certificatename | default('RepublicDay_2025') }}"
 
 activity-aggregate-updater:
   activity-aggregate-updater: |+
@@ -696,7 +697,6 @@ collection-certificate-generator:
     }
     enable.suppress.exception = {{ collection_certificate_generator_enable_suppress_exception | lower }}
     enable.rc.certificate = false
-    specialEventCertificateName = "{{ special_event_certificatename | default('RepublicDay_2025') }}"
 
 
   flink-conf: |+
