@@ -184,8 +184,15 @@ object Utility {
     val courseList = cassandraUtil.find(selectWhere.toString)
     if (courseList != null && courseList.size() > 0) {
       val hierarchy = courseList.get(0).getString(config.HIERARCHY)
-      mapper.readValue(hierarchy, classOf[java.util.Map[String, AnyRef]]).asInstanceOf[util.HashMap[String, AnyRef]]
-    } else {
+      try {
+        mapper.readValue(hierarchy, classOf[java.util.Map[String, AnyRef]]).asInstanceOf[util.HashMap[String, AnyRef]]
+      }
+     catch {
+      case e: Exception =>
+        logger.error(s"Failed to parse hierarchy JSON for courseId: $courseId, hierarchy: $hierarchy", e)
+         throw e
+       } }
+      else {
       new util.HashMap[String, AnyRef]()
     }
   }
