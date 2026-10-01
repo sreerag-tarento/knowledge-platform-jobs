@@ -76,7 +76,7 @@ trait ContentHelper {
         .getOrElse("language", List.empty[String])
         .asInstanceOf[List[String]]
       val contextCategory = StringContext
-        .processEscapes(response.getOrElse("contextCategory", "").asInstanceOf[String]).filter(_ >= ' ')
+        .processEscapes(response.getOrElse(config.contextCategory, "").asInstanceOf[String]).filter(_ >= ' ')
       val courseInfoMap: java.util.Map[String, AnyRef] =
         new java.util.HashMap[String, AnyRef]()
       courseInfoMap.put("courseId", courseId)
@@ -85,7 +85,7 @@ trait ContentHelper {
       courseInfoMap.put("primaryCategory", primaryCategory)
       courseInfoMap.put("versionKey", versionKey)
       courseInfoMap.put("courseCategory", courseCateogry)
-      courseInfoMap.put("contextCategory", contextCategory)
+      courseInfoMap.put(config.contextCategory, contextCategory)
       val languageMapV1 = response.getOrElse("languageMapV1", Map.empty[String, AnyRef])
       courseInfoMap.put("languageMapV1", languageMapV1.asInstanceOf[AnyRef])
       courseInfoMap.put("leafNodes", leafNodes)
@@ -131,7 +131,7 @@ trait ContentHelper {
         .getOrElse("language", new java.util.ArrayList())
         .asInstanceOf[java.util.ArrayList[String]]
       val contextCategory = StringContext
-        .processEscapes(courseMetadata.getOrElse("contextcategory", "").asInstanceOf[String]).filter(_ >= ' ')
+        .processEscapes(courseMetadata.getOrElse(config.contextCategory.toLowerCase, "").asInstanceOf[String]).filter(_ >= ' ')
       val courseInfoMap: java.util.Map[String, AnyRef] =
         new java.util.HashMap[String, AnyRef]()
       val preliminaryAssessment = StringContext
@@ -145,7 +145,7 @@ trait ContentHelper {
       courseInfoMap.put("primaryCategory", primaryCategory)
       courseInfoMap.put("versionKey", versionKey)
       courseInfoMap.put("courseCategory", courseCateogry)
-      courseInfoMap.put("contextCategory", contextCategory)
+      courseInfoMap.put(config.contextCategory, contextCategory)
       courseInfoMap.put(config.preliminaryAssessment, preliminaryAssessment)
       val languageMapV1: Map[String, Map[String, AnyRef]] =
         toScalaNestedMap(courseMetadata.getOrElse("languagemapv1", new java.util.HashMap[String, Object]()))
@@ -240,9 +240,9 @@ trait ContentHelper {
     leafIds.foreach { leafId =>
       try {
         val leafContent = getCourseInfo(leafId)(metrics, config, contentCache, httpUtil)
-        val contextCategory = leafContent.getOrDefault("contextCategory", "").asInstanceOf[String]
+        val contextCategory = leafContent.getOrDefault(config.contextCategory, "").asInstanceOf[String]
         logger.info(s"getExcludedOptionalAssessmentIds: courseId=$courseId leafId=$leafId contextCategory=$contextCategory")
-        if ("Optional Pre Assessment".equalsIgnoreCase(contextCategory)) {
+        if (config.optionalPreAssessment.equalsIgnoreCase(contextCategory)) {
           logger.info(s"getExcludedOptionalAssessmentIds: courseId=$courseId MATCHED Optional Pre Assessment, excluding leafId=$leafId")
           excludedIds += leafId
         }

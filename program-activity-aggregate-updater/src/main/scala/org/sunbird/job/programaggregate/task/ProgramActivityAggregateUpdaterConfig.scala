@@ -93,6 +93,8 @@ class ProgramActivityAggregateUpdaterConfig(override val config: Config) extends
   val unitActivityType = "course-unit"
   val courseActivityType = "course"
   val leafNodes = "leafnodes"
+  val contextCategory = "contextCategory"
+  val optionalPreAssessment = "Optional Pre Assessment"
   val ancestors = "ancestors"
   val viewcount = "viewcount"
   val completedcount = "completedcount"

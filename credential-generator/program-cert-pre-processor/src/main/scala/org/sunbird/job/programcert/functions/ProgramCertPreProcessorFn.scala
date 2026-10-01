@@ -529,7 +529,7 @@ class ProgramCertPreProcessorFn(config: ProgramCertPreProcessorConfig, httpUtil:
         .getOrElse(config.badgeDetailsV1, new java.util.ArrayList())
       val contextCategory = StringContext
         .processEscapes(
-          response.getOrElse("contextCategory", "").asInstanceOf[String]
+          response.getOrElse(config.contextCategory, "").asInstanceOf[String]
         )
         .filter(_ >= ' ')
       val courseInfoMap: java.util.Map[String, AnyRef] =
@@ -539,7 +539,7 @@ class ProgramCertPreProcessorFn(config: ProgramCertPreProcessorConfig, httpUtil:
       courseInfoMap.put(config.leafNodes, leafNodes.asJava)
       courseInfoMap.put(config.language, language.asJava)
       courseInfoMap.put(config.badgeDetailsV1, badgeDetailsV1)
-      courseInfoMap.put("contextCategory", contextCategory)
+      courseInfoMap.put(config.contextCategory, contextCategory)
       courseInfoMap
     } else {
       val primaryCategory = StringContext
@@ -558,7 +558,7 @@ class ProgramCertPreProcessorFn(config: ProgramCertPreProcessorConfig, httpUtil:
       val contextCategory = StringContext
         .processEscapes(
           courseMetadata
-            .getOrElse("contextcategory", "")
+            .getOrElse(config.contextCategory.toLowerCase, "")
             .asInstanceOf[String]
         )
         .filter(_ >= ' ')
@@ -569,7 +569,7 @@ class ProgramCertPreProcessorFn(config: ProgramCertPreProcessorConfig, httpUtil:
       courseInfoMap.put(config.leafNodes, leafNodes)
       courseInfoMap.put(config.language, language)
       courseInfoMap.put(config.badgeDetailsV1, badgeDetailsV1)
-      courseInfoMap.put("contextCategory", contextCategory)
+      courseInfoMap.put(config.contextCategory, contextCategory)
       courseInfoMap
     }
 
@@ -578,8 +578,8 @@ class ProgramCertPreProcessorFn(config: ProgramCertPreProcessorConfig, httpUtil:
   def getExcludedOptionalAssessmentIds(leafNodeIds: List[String])(metrics: Metrics): Set[String] = {
     leafNodeIds.filter { leafId =>
       val leafContent = getCourseInfo(leafId)(metrics, config, contentCache, httpUtil)
-      val contextCategory = leafContent.getOrDefault("contextCategory", "").asInstanceOf[String]
-      "Optional Pre Assessment".equalsIgnoreCase(contextCategory)
+      val contextCategory = leafContent.getOrDefault(config.contextCategory, "").asInstanceOf[String]
+      config.optionalPreAssessment.equalsIgnoreCase(contextCategory)
     }.toSet
   }
 
