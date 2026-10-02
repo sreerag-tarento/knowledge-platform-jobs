@@ -155,7 +155,7 @@ class ProgramActivityAggregateUpdaterConfig(override val config: Config) extends
   val preliminary_Assessment_Key = "preliminaryassessment"
   val leafNodesKey = "leafNodes"
   val contentReadFields: String = if (config.hasPath("content.read.fields")) config.getString("content.read.fields") else
-    "identifier,name,versionKey,parentCollections,primaryCategory,courseCategory,languageMapV1,leafNodes,language,milestones_v1,preliminaryAssessment"
+    "identifier,name,versionKey,parentCollections,primaryCategory,courseCategory,languageMapV1,leafNodes,language,milestones_v1,preliminaryAssessment,contextCategory"
   val userid = "userid"
   val courseid = "courseid"
   val batchid = "batchid"
