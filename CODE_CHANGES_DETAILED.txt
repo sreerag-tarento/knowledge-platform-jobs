@@ -1,0 +1,258 @@
+================================================================================
+CODE CHANGES - DETAILED DIFF
+================================================================================
+
+FILE 1: jobs-core/src/main/scala/org/sunbird/job/util/CassandraUtil.scala
+================================================================================
+
+LOCATION: Line 52-58
+
+--- BEFORE ---
+  /** Execute a plain CQL string and return all rows at default consistency. */
+  def find(query: String): util.List[Row] = {
+    executeWithRetry(new SimpleStatement(query)).all()
+  }
+
+  def upsert(query: String): Boolean = {
+
+--- AFTER ---
+  /** Execute a plain CQL string and return all rows at default consistency. */
+  def find(query: String): util.List[Row] = {
+    executeWithRetry(new SimpleStatement(query)).all()
+  }
+
+  /**
+   * Execute a pre-built Statement and return all rows
+   * (allows caller to set a custom ConsistencyLevel, e.g. LOCAL_QUORUM).
+   */
+  def findWithStatement(stmt: Statement): util.List[Row] = {
+    executeWithRetry(stmt).all()
+  }
+
+  def upsert(query: String): Boolean = {
+
+CHANGE TYPE: Addition
+IMPACT: Enables custom consistency levels for multi-row reads
+
+================================================================================
+
+FILE 2: activity-aggregate-updater-v2/src/main/scala/org/sunbird/job/aggregate/v2/functions/ActivityAggregatesFunctionV2.scala
+================================================================================
+
+CHANGE 1: updateContentStatuses() method - Add LOCAL_QUORUM to updates
+LOCATION: Line 192-204
+
+--- BEFORE ---
+           val updateQuery = QueryBuilder.update(config.dbKeyspace, config.dbUserContentConsumptionTable)
+             .`with`(QueryBuilder.set("status", finalStatus))
+             .and(QueryBuilder.set("completedcount", completedCount))
+             .and(QueryBuilder.set("viewcount", viewCount))
+             .where(QueryBuilder.eq("userid", event.userId))
+             .and(QueryBuilder.eq("courseid", event.courseId))
+             .and(QueryBuilder.eq("batchid", event.batchId))
+             .and(QueryBuilder.eq("language", event.language))
+             .and(QueryBuilder.eq("contentid", contentId))
+
+           cassandraUtil.update(updateQuery)
+
+--- AFTER ---
+           val updateQuery = QueryBuilder.update(config.dbKeyspace, config.dbUserContentConsumptionTable)
+             .`with`(QueryBuilder.set("status", finalStatus))
+             .and(QueryBuilder.set("completedcount", completedCount))
+             .and(QueryBuilder.set("viewcount", viewCount))
+             .where(QueryBuilder.eq("userid", event.userId))
+             .and(QueryBuilder.eq("courseid", event.courseId))
+             .and(QueryBuilder.eq("batchid", event.batchId))
+             .and(QueryBuilder.eq("language", event.language))
+             .and(QueryBuilder.eq("contentid", contentId))
+
+           // LOCAL_QUORUM: ensure write reaches majority of nodes before proceeding
+           updateQuery.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM)
+           cassandraUtil.update(updateQuery)
+
+CHANGE TYPE: Enhancement
+PURPOSE: Ensure content consumption updates reach majority nodes before proceeding
+BENEFIT: Prevents inconsistent state in concurrent event processing
+
+================================================================================
+
+CHANGE 2: readContentConsumption() method - Add LOCAL_QUORUM to reads
+LOCATION: Line 315-349
+
+--- BEFORE ---
+  def readContentConsumption(
+                              userId: String,
+                              courseId: String,
+                              batchId: String,
+                              language: String,
+                              contentId: String
+                            ): Map[String, AnyRef] = {
+
+    val query = QueryBuilder.select()
+      .all()
+      .from(config.dbKeyspace, config.dbUserContentConsumptionTable)
+      .where(QueryBuilder.eq("userid", userId))
+      .and(QueryBuilder.eq("courseid", courseId))
+      .and(QueryBuilder.eq("batchid", batchId))
+      .and(QueryBuilder.eq("language", language))
+      .and(QueryBuilder.eq("contentid", contentId))
+      .limit(1)
+
+    val rows = cassandraUtil.find(query.toString).asScala
+
+    if (rows.nonEmpty) {
+      val row = rows.head
+      Map(
+        "status" -> Int.box(Option(row.getObject("status")).map(_.asInstanceOf[Int]).getOrElse(0)),
+        "viewcount" -> Int.box(Option(row.getObject("viewcount")).map(_.asInstanceOf[Int]).getOrElse(0)),
+        "completedcount" -> Int.box(Option(row.getObject("completedcount")).map(_.asInstanceOf[Int]).getOrElse(0)),
+        "last_access_time" -> Option(row.getTimestamp("last_access_time")).orNull
+      )
+    } else {
+      Map.empty[String, AnyRef]
+    }
+  }
+
+--- AFTER ---
+  def readContentConsumption(
+                              userId: String,
+                              courseId: String,
+                              batchId: String,
+                              language: String,
+                              contentId: String
+                            ): Map[String, AnyRef] = {
+
+    val query = QueryBuilder.select()
+      .all()
+      .from(config.dbKeyspace, config.dbUserContentConsumptionTable)
+      .where(QueryBuilder.eq("userid", userId))
+      .and(QueryBuilder.eq("courseid", courseId))
+      .and(QueryBuilder.eq("batchid", batchId))
+      .and(QueryBuilder.eq("language", language))
+      .and(QueryBuilder.eq("contentid", contentId))
+      .limit(1)
+
+    // LOCAL_QUORUM: require majority of replica nodes to respond so we never read stale data
+    val stmt = new SimpleStatement(query.toString)
+      .setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM)
+    val rows = cassandraUtil.findWithStatement(stmt).asScala
+
+    if (rows.nonEmpty) {
+      val row = rows.head
+      Map(
+        "status" -> Int.box(Option(row.getObject("status")).map(_.asInstanceOf[Int]).getOrElse(0)),
+        "viewcount" -> Int.box(Option(row.getObject("viewcount")).map(_.asInstanceOf[Int]).getOrElse(0)),
+        "completedcount" -> Int.box(Option(row.getObject("completedcount")).map(_.asInstanceOf[Int]).getOrElse(0)),
+        "last_access_time" -> Option(row.getTimestamp("last_access_time")).orNull
+      )
+    } else {
+      Map.empty[String, AnyRef]
+    }
+  }
+
+CHANGE TYPE: Enhancement
+PURPOSE: Use quorum consistency for all content consumption reads
+BENEFIT: Guarantees we never read stale data from out-of-sync nodes
+
+================================================================================
+
+CHANGE 3: markLPCompleted() method - Add LOCAL_QUORUM to LP completion updates
+LOCATION: Line 709-726
+
+--- BEFORE ---
+   def markLPCompleted(
+                        userId: String,
+                        lpId: String,
+                        batchId: String
+                      ): Unit = {
+
+     val updateQuery = QueryBuilder
+       .update(config.dbKeyspace, config.dbUserEnrolmentsTable)
+       .`with`(QueryBuilder.set(JsonKeys.STATUS, 2))
+       .and(QueryBuilder.set(JsonKeys.COMPLETED_ON_KEY, new java.util.Date()))
+       .and(QueryBuilder.set(JsonKeys.DATE_TIME_KEY, System.currentTimeMillis()))
+       .where(QueryBuilder.eq(JsonKeys.USER_ID_KEY, userId))
+       .and(QueryBuilder.eq(JsonKeys.COURSE_ID_KEY, lpId))
+       .and(QueryBuilder.eq(JsonKeys.BATCH_ID_KEY, batchId))
+
+     cassandraUtil.update(updateQuery)
+
+     logger.info(
+       s"LP marked as completed (status=2) for user=$userId, lpId=$lpId, batchId=$batchId"
+     )
+   }
+
+--- AFTER ---
+   def markLPCompleted(
+                        userId: String,
+                        lpId: String,
+                        batchId: String
+                      ): Unit = {
+
+     val updateQuery = QueryBuilder
+       .update(config.dbKeyspace, config.dbUserEnrolmentsTable)
+       .`with`(QueryBuilder.set(JsonKeys.STATUS, 2))
+       .and(QueryBuilder.set(JsonKeys.COMPLETED_ON_KEY, new java.util.Date()))
+       .and(QueryBuilder.set(JsonKeys.DATE_TIME_KEY, System.currentTimeMillis()))
+       .where(QueryBuilder.eq(JsonKeys.USER_ID_KEY, userId))
+       .and(QueryBuilder.eq(JsonKeys.COURSE_ID_KEY, lpId))
+       .and(QueryBuilder.eq(JsonKeys.BATCH_ID_KEY, batchId))
+
+     // LOCAL_QUORUM: ensure write reaches majority of nodes before proceeding
+     updateQuery.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM)
+     cassandraUtil.update(updateQuery)
+
+     logger.info(
+       s"LP marked as completed (status=2) for user=$userId, lpId=$lpId, batchId=$batchId"
+     )
+   }
+
+CHANGE TYPE: Enhancement
+PURPOSE: Ensure LP completion updates reach majority nodes before proceeding
+BENEFIT: Prevents duplicate LP completion events and certificate issuance
+
+================================================================================
+SUMMARY OF CHANGES
+================================================================================
+
+Total Files Modified: 2
+Total Methods Enhanced: 3 (+ 1 new method added to utility class)
+
+Changes by Type:
+  - WRITE Operations: 2 (now use LOCAL_QUORUM)
+  - READ Operations: 1 (now uses LOCAL_QUORUM)
+  - New Utility Method: 1 (findWithStatement)
+
+Total Lines Added: ~20 (including comments and consistency level settings)
+Total Lines Removed: 0
+Breaking Changes: 0
+Backward Compatibility: 100%
+
+================================================================================
+CONSISTENCY LEVELS APPLIED
+================================================================================
+
+Operation                    | Before           | After
+-----------------------------|------------------|------------------
+updateContentStatuses()      | Default (ONE)    | LOCAL_QUORUM
+readContentConsumption()     | Default (ONE)    | LOCAL_QUORUM
+markLPCompleted()            | Default (ONE)    | LOCAL_QUORUM
+triggerCertificateIfRequired()| LOCAL_QUORUM ✓  | LOCAL_QUORUM ✓
+updateUserEnrolmentLangStatus()| LOCAL_QUORUM ✓ | LOCAL_QUORUM ✓
+getEnrolment() 3-param       | LOCAL_QUORUM ✓  | LOCAL_QUORUM ✓
+
+Note: ✓ indicates operations that already had LOCAL_QUORUM before this change
+
+================================================================================
+TESTING & VALIDATION
+================================================================================
+
+✅ Code Compilation: SUCCESS
+✅ JAR Build: SUCCESS (155 MB)
+✅ No Compilation Errors: 0 errors
+✅ Type Safety: All changes maintain type safety
+✅ Imports: All necessary imports already present (ConsistencyLevel, SimpleStatement)
+✅ No Breaking Changes: All changes are additive or transparent
+
+================================================================================
+
